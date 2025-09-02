@@ -3,15 +3,15 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
 
-@shared_task
+@shared_task(name="send_2fa_email_task")
 def send_2fa_email_task(user_id, code):
     """
     Sends the 2FA code to the user's email in the background.
     """
     try:
         user = User.objects.get(id=user_id)
-        subject = 'Your 2FA Code'
-        message = f'Your 2FA code is: {code}'
+        subject = 'Código 2FA Clientes'
+        message = f'Su código 2FA es: {code}'
         from_email = settings.DEFAULT_FROM_EMAIL
         recipient_list = [user.email]
         
