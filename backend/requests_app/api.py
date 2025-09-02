@@ -15,6 +15,7 @@ from .tasks import send_2fa_email_task
 import random
 import string
 from django.conf import settings
+from datetime import datetime, timezone, timedelta
 
 def get_client_ip(request):
     """A simple utility to get the client's IP address."""
@@ -41,14 +42,17 @@ class VerifySchema(Schema):
 def login(request, payload: LoginSchema):
     user = authenticate(username=payload.username, password=payload.password)
     if user is not None:
-        code = ''.join(random.choices(string.digits, k=4))
+        code = ''.join(random.choices(string.digits, k=4))   
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)        
         two_factor_auth, created = TwoFactorAuth.objects.update_or_create(
             user=user,
-            defaults={'code': code}
+            defaults={
+                'code': code,
+                'expires_at': expires_at,
+                'created_at': datetime.now(timezone.utc)  # opcional si quieres actualizar created_at
+            }
         )
-        # Send 2FA code via Celery task
         send_2fa_email_task.delay(user.id, code)
-        
         return {"message": "2FA code sent to your email."}
     return {"message": "Invalid credentials."}
 
