@@ -37,7 +37,7 @@ export default function RequestsPage() {
         </div>
 
         <div>
-          <RequestList showControls={true} title="Todas las Solicitudes" />
+          <RequestList showControls={true} title="Solicitudes" />
         </div>
       </div>
     </main>

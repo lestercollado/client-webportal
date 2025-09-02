@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Portal de Solicitud de Usuarios",
+  title: "Clientes v1.0",
   description: "Aplicación para la solicitud de creación de usuarios.",
 };
 

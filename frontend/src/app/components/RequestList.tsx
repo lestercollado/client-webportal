@@ -12,15 +12,33 @@ interface RequestListProps {
   title?: string;
 }
 
+// Interfaz para la respuesta paginada
+interface PaginatedRequests {
+  items: UserRequest[];
+  total_pages: number;
+  current_page?: number;
+  total_items?: number;
+}
+
+// Type guard para verificar si es una respuesta paginada
+function isPaginatedResponse(data: any): data is PaginatedRequests {
+  return data && 
+         typeof data === 'object' && 
+         'items' in data && 
+         Array.isArray(data.items) && 
+         'total_pages' in data && 
+         typeof data.total_pages === 'number';
+}
+
 const RequestList = ({ 
   limit, 
   showControls = true, 
-  title = "Historial de Solicitudes" 
+  title = "Últimas Solicitudes" 
 }: RequestListProps) => {
   const [requests, setRequests] = useState<UserRequest[]>([]);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // Para la carga inicial
-  const [isFetching, setIsFetching] = useState(false); // Para las recargas
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const { auth } = useAuth();
 
   // Estados para paginación y filtros
@@ -49,18 +67,29 @@ const RequestList = ({
       if (filters.customer_code) params.append('customer_code', filters.customer_code);
       if (filters.contact_email) params.append('contact_email', filters.contact_email);
 
-      // TODO: La función getRequests debe ser actualizada para aceptar los query params
-      // Por ahora, se asume que los acepta. La API debe devolver un objeto con { items: [], total_pages: X }
       const data = await getRequests(auth.token, params);
       
-      // Simulando la respuesta paginada si la API no la soporta aún
-      const response = data.items ? data : { items: data, total_pages: 1 };
-
-      setRequests(response.items);
-      setTotalPages(response.total_pages);
+      // Usar type guard para manejar ambos tipos de respuesta
+      if (isPaginatedResponse(data)) {
+        // Es una respuesta paginada
+        setRequests(data.items);
+        setTotalPages(data.total_pages);
+      } else if (Array.isArray(data)) {
+        // Es un array simple de UserRequest
+        setRequests(data);
+        setTotalPages(1);
+      } else {
+        // Caso de error - datos en formato inesperado
+        console.error('Formato de respuesta inesperado:', data);
+        setRequests([]);
+        setTotalPages(1);
+        setError('Los datos recibidos tienen un formato inesperado.');
+      }
 
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al cargar las solicitudes.');
+      setRequests([]);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
       setIsFetching(false);
@@ -291,7 +320,7 @@ const RequestList = ({
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
                   No hay solicitudes para mostrar.
                 </td>
               </tr>
