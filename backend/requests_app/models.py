@@ -12,6 +12,7 @@ class UserRequest(models.Model):
 
     customer_code = models.CharField(max_length=100, verbose_name="Código del Cliente")
     contact_email = models.EmailField(verbose_name="Correo Electrónico de Contacto")
+    notes = models.TextField(verbose_name="Notas", blank=True, null=True)
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendiente', verbose_name="Estado")
     

@@ -5,6 +5,7 @@ export interface UserRequest {
   id: number;
   customer_code: string;
   contact_email: string;
+  notes?: string;
   status: string;
   created_at: string;
   created_by_username?: string;

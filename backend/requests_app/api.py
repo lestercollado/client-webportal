@@ -103,11 +103,12 @@ def get_request(request, request_id: int):
     return user_request
 
 @router.post("/", response=UserRequestSchema)
-def create_request(request, customer_code: str = Form(...), contact_email: str = Form(...), attachments: List[UploadedFile] = File(...)):
+def create_request(request, customer_code: str = Form(...), contact_email: str = Form(...), notes: str = Form(None), attachments: List[UploadedFile] = File(...)):
     """Creates a new user request with multiple file attachments."""
     data = {
         "customer_code": customer_code,
         "contact_email": contact_email,
+        "notes": notes,
     }
     user_request = UserRequest.objects.create(
         **data,
@@ -129,6 +130,7 @@ def update_request(
     customer_code: str = Form(None),
     contact_email: str = Form(None),
     status: str = Form(None),
+    notes: str = Form(None),
     attachments: List[UploadedFile] = File(None),
     attachments_to_delete: str = Form(None)  # JSON string of IDs
 ):
@@ -142,6 +144,8 @@ def update_request(
         user_request.contact_email = contact_email
     if status is not None:
         user_request.status = status
+    if notes is not None:
+        user_request.notes = notes
         
     # Delete attachments if requested
     if attachments_to_delete:
