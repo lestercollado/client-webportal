@@ -27,7 +27,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [auth, setAuth] = useState<AuthData | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -52,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (username, password) => {
     try {
       const response = await api.login(username, password);
-      setUsername(username);
+      localStorage.setItem('usernameFor2FA', username); // Guardar username
       return response;
     } catch (error) {
       console.error("Login failed:", error);
@@ -61,34 +60,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const verify = async (code: string) => {
-    if (!username) {
-      throw new Error("Username not set.");
+    const usernameFor2FA = localStorage.getItem('usernameFor2FA'); // Leer username
+    if (!usernameFor2FA) {
+      throw new Error("Username not found for 2FA.");
     }
-    setLoading(true); // Iniciar carga
+    setLoading(true);
     try {
-      const data = await api.verify2FA(username, code);
+      const data = await api.verify2FA(usernameFor2FA, code);
       const newAuth: AuthData = {
         token: data.access,
-        user: { username },
+        user: { username: usernameFor2FA },
       };
       localStorage.setItem('auth', JSON.stringify(newAuth));
       setAuth(newAuth);
+      localStorage.removeItem('usernameFor2FA'); // Limpiar username
       router.push('/');
     } catch (error) {
       console.error("2FA verification failed:", error);
-      // Asegurarse de limpiar el estado en caso de error
       localStorage.removeItem('auth');
       setAuth(null);
       throw error;
     } finally {
-      setLoading(false); // Finalizar carga
+      setLoading(false);
     }
   };
 
   const logout = () => {
     localStorage.removeItem('auth');
     setAuth(null);
-    setUsername(null);
     router.push('/login');
   };
 

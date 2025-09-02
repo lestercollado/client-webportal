@@ -36,12 +36,7 @@ export default function NewRequestPage() {
           </Link>
         </div>
 
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-gray-800 text-center mb-8">
-            Crear Nueva Solicitud
-          </h2>
-          <NewRequestForm />
-        </div>
+        <NewRequestForm />
       </div>
     </main>
   );
