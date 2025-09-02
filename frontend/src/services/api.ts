@@ -29,6 +29,35 @@ export interface Stats {
   total: number;
 }
 
+export const login = async (username, password) => {
+  const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to login');
+  }
+  return response.json();
+};
+
+export const verify2FA = async (username, code) => {
+  const response = await fetch(`${API_BASE_URL}/api/auth/verify-2fa/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, code }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to verify 2FA code');
+  }
+  return response.json();
+};
+
+
 /**
  * Obtiene la lista de todas las solicitudes de usuario.
  * @param token - El token de autenticación (actualmente simulado).
