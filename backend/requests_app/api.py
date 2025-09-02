@@ -11,9 +11,9 @@ from django.contrib.auth import authenticate
 from ninja.schema import Schema
 import json
 import os
+from .tasks import send_2fa_email_task
 import random
 import string
-from django.core.mail import send_mail
 from django.conf import settings
 
 def get_client_ip(request):
@@ -46,16 +46,9 @@ def login(request, payload: LoginSchema):
             user=user,
             defaults={'code': code}
         )
-        # In a real application, you would use an email service.
-        # For this example, we'll print the code to the console.
-        print(f"2FA Code for {user.username}: {code}")
-        send_mail(
-            'Your 2FA Code',
-            f'Your 2FA code is: {code}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
+        # Send 2FA code via Celery task
+        send_2fa_email_task.delay(user.id, code)
+        
         return {"message": "2FA code sent to your email."}
     return {"message": "Invalid credentials."}
 
