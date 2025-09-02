@@ -33,7 +33,7 @@ function isPaginatedResponse(data: any): data is PaginatedRequests {
 const RequestList = ({ 
   limit, 
   showControls = true, 
-  title = "Últimas Solicitudes" 
+  title = "Últimas Solicitudes"
 }: RequestListProps) => {
   const [requests, setRequests] = useState<UserRequest[]>([]);
   const [error, setError] = useState('');

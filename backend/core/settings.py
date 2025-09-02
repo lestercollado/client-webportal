@@ -138,7 +138,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ninja JWT Configuration
 NINJA_JWT = {
-    'SIGNING_KEY': SECRET_KEY,
+    "ACCESS_TOKEN_EXPIRE_MINUTES": 60,
+    "REFRESH_TOKEN_EXPIRE_DAYS": 7,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
 
 AUTH_LDAP_SERVER_URI = "ldap://ldap.tcmariel.cu:389"
@@ -228,3 +233,14 @@ LOGGING = {
         },
     },
 }
+
+
+# Email Configuration for 2FA (Development)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_SSL = False
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

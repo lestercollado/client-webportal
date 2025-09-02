@@ -1,12 +1,20 @@
 from typing import List, Optional
 from ninja import Router, File, UploadedFile, Form
 from django.shortcuts import get_object_or_404
-from .models import UserRequest, Attachment
+from .models import UserRequest, Attachment, TwoFactorAuth
 from .schemas import UserRequestSchema, UserRequestCreateSchema, UserRequestUpdateSchema, StatsOut
 from django.db.models import Count, Q
-from ninja_jwt.authentication  import JWTAuth
+from ninja_jwt.authentication import JWTAuth
+from ninja_jwt.tokens import RefreshToken
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from ninja.schema import Schema
 import json
 import os
+import random
+import string
+from django.core.mail import send_mail
+from django.conf import settings
 
 def get_client_ip(request):
     """A simple utility to get the client's IP address."""
@@ -19,8 +27,53 @@ def get_client_ip(request):
 
 # Using a Router is a best practice for app-level APIs.
 router = Router()
+auth_router = Router()
 
-@router.get("/stats/", response=StatsOut, auth=JWTAuth())
+class LoginSchema(Schema):
+    username: str
+    password: str
+
+class VerifySchema(Schema):
+    username: str
+    code: str
+
+@auth_router.post("/login/")
+def login(request, payload: LoginSchema):
+    user = authenticate(username=payload.username, password=payload.password)
+    if user is not None:
+        code = ''.join(random.choices(string.digits, k=4))
+        two_factor_auth, created = TwoFactorAuth.objects.update_or_create(
+            user=user,
+            defaults={'code': code}
+        )
+        # In a real application, you would use an email service.
+        # For this example, we'll print the code to the console.
+        print(f"2FA Code for {user.username}: {code}")
+        send_mail(
+            'Your 2FA Code',
+            f'Your 2FA code is: {code}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        return {"message": "2FA code sent to your email."}
+    return {"message": "Invalid credentials."}
+
+@auth_router.post("/verify-2fa/")
+def verify_2fa(request, payload: VerifySchema):
+    user = get_object_or_404(User, username=payload.username)
+    two_factor_auth = get_object_or_404(TwoFactorAuth, user=user, code=payload.code)
+
+    if not two_factor_auth.is_expired():
+        refresh = RefreshToken.for_user(user)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+    return {"message": "Code expired or invalid."}
+
+
+@router.get("/stats/", response=StatsOut)
 def get_stats(request):
     """Returns statistics about user requests."""
     stats = UserRequest.objects.filter(active=True).aggregate(
@@ -31,7 +84,7 @@ def get_stats(request):
     )
     return stats
 
-@router.get("/", response=List[UserRequestSchema], auth=JWTAuth())
+@router.get("/", response=List[UserRequestSchema])
 def list_requests(
     request,
     status: Optional[str] = None,
@@ -50,13 +103,13 @@ def list_requests(
         
     return qs.order_by('-created_at')
 
-@router.get("/{request_id}", response=UserRequestSchema, auth=JWTAuth())
+@router.get("/{request_id}", response=UserRequestSchema)
 def get_request(request, request_id: int):
     """Retrieves a single user request by its ID."""
     user_request = get_object_or_404(UserRequest, id=request_id)
     return user_request
 
-@router.post("/", response=UserRequestSchema, auth=JWTAuth())
+@router.post("/", response=UserRequestSchema)
 def create_request(request, customer_code: str = Form(...), contact_email: str = Form(...), attachments: List[UploadedFile] = File(...)):
     """Creates a new user request with multiple file attachments."""
     data = {
@@ -76,7 +129,7 @@ def create_request(request, customer_code: str = Form(...), contact_email: str =
         )
     return user_request
 
-@router.put("/{request_id}", response=UserRequestSchema, auth=JWTAuth())
+@router.put("/{request_id}", response=UserRequestSchema)
 def update_request(
     request, 
     request_id: int, 
@@ -125,7 +178,7 @@ def update_request(
     user_request.refresh_from_db()
     return user_request
 
-@router.delete("/{request_id}", response={204: None}, auth=JWTAuth())
+@router.delete("/{request_id}", response={204: None})
 def delete_request(request, request_id: int):
     """Soft deletes a user request by setting its active flag to False."""
     user_request = get_object_or_404(UserRequest, id=request_id)

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import * as api from '@/services/api';
 
 // Asumimos que la API devuelve un token y datos del usuario
 interface User {
@@ -17,14 +18,16 @@ interface AuthData {
 interface AuthContextType {
   auth: AuthData | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<any>;
   logout: () => void;
+  verify: (code: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [auth, setAuth] = useState<AuthData | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -46,34 +49,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadAuthFromStorage();
   }, [loadAuthFromStorage]);
 
-  const login = async (username: string, password: string) => {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
+  const login = async (username, password) => {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/token/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await api.login(username, password);
+      setUsername(username);
+      return response;
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  };
 
-      if (!response.ok) {
-        throw new Error('Usuario o contraseña incorrectos');
-      }
-
-      const data = await response.json();
-      
-      // Assuming the token is in `data.access` as per django-ninja-jwt default
+  const verify = async (code: string) => {
+    if (!username) {
+      throw new Error("Username not set.");
+    }
+    try {
+      const data = await api.verify2FA(username, code);
       const newAuth: AuthData = {
-        token: data.access, 
-        user: { username }, // You might want to decode the token to get more user info
+        token: data.access,
+        user: { username },
       };
-
       localStorage.setItem('auth', JSON.stringify(newAuth));
       setAuth(newAuth);
       router.push('/');
-
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("2FA verification failed:", error);
       throw error;
     }
   };
@@ -81,11 +82,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     localStorage.removeItem('auth');
     setAuth(null);
+    setUsername(null);
     router.push('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ auth, loading, login, logout }}>
+    <AuthContext.Provider value={{ auth, loading, login, logout, verify }}>
       {children}
     </AuthContext.Provider>
   );

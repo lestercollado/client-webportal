@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -17,8 +19,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(username, password);
-      // La redirección la maneja el AuthContext
+      const response = await login(username, password);
+      if (response && response.message === "2FA code sent to your email.") {
+        router.push('/login/verify');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error inesperado.');
     } finally {
