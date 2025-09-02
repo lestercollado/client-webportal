@@ -21,6 +21,7 @@ class UserRequestSchema(Schema):
     id: int
     customer_code: str
     contact_email: str
+    notes: Optional[str] = None
     status: str
     created_at: datetime
     created_by_username: Optional[str] = None
@@ -39,6 +40,7 @@ class UserRequestSchema(Schema):
 class UserRequestCreateSchema(Schema):
     customer_code: str
     contact_email: str
+    notes: Optional[str] = None
 
 class UserRequestUpdateSchema(Schema):
     customer_code: Optional[str] = None

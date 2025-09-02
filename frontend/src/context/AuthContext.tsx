@@ -64,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!username) {
       throw new Error("Username not set.");
     }
+    setLoading(true); // Iniciar carga
     try {
       const data = await api.verify2FA(username, code);
       const newAuth: AuthData = {
@@ -75,7 +76,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.push('/');
     } catch (error) {
       console.error("2FA verification failed:", error);
+      // Asegurarse de limpiar el estado en caso de error
+      localStorage.removeItem('auth');
+      setAuth(null);
       throw error;
+    } finally {
+      setLoading(false); // Finalizar carga
     }
   };
 
