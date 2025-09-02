@@ -1,0 +1,328 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { getRequests, UserRequest, deleteRequest, updateRequestStatus } from '@/services/api';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+
+interface RequestListProps {
+  limit?: number;
+  showControls?: boolean;
+  title?: string;
+}
+
+const RequestList = ({ 
+  limit, 
+  showControls = true, 
+  title = "Historial de Solicitudes" 
+}: RequestListProps) => {
+  const [requests, setRequests] = useState<UserRequest[]>([]);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true); // Para la carga inicial
+  const [isFetching, setIsFetching] = useState(false); // Para las recargas
+  const { auth } = useAuth();
+
+  // Estados para paginación y filtros
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filters, setFilters] = useState({
+    status: '',
+    customer_code: '',
+    contact_email: ''
+  });
+
+  const fetchRequests = async () => {
+    if (!auth?.token) {
+      setError('No estás autenticado.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsFetching(true);
+      // Construir query params
+      const params = new URLSearchParams();
+      params.append('page', currentPage.toString());
+      if (limit) params.append('limit', limit.toString());
+      if (filters.status) params.append('status', filters.status);
+      if (filters.customer_code) params.append('customer_code', filters.customer_code);
+      if (filters.contact_email) params.append('contact_email', filters.contact_email);
+
+      // TODO: La función getRequests debe ser actualizada para aceptar los query params
+      // Por ahora, se asume que los acepta. La API debe devolver un objeto con { items: [], total_pages: X }
+      const data = await getRequests(auth.token, params);
+      
+      // Simulando la respuesta paginada si la API no la soporta aún
+      const response = data.items ? data : { items: data, total_pages: 1 };
+
+      setRequests(response.items);
+      setTotalPages(response.total_pages);
+
+    } catch (err: any) {
+      setError(err.message || 'Ocurrió un error al cargar las solicitudes.');
+    } finally {
+      setIsLoading(false);
+      setIsFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [auth?.token, currentPage, filters]);
+  
+  const router = useRouter();
+  
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+    setCurrentPage(1); // Resetear a la primera página al cambiar filtros
+  };
+
+  const updateRequestInList = (updatedRequest: UserRequest) => {
+    setRequests(requests.map(req => req.id === updatedRequest.id ? updatedRequest : req));
+  };
+
+  const handleApprove = async (id: number) => {
+    if (!auth?.token) return toast.error('No estás autenticado.');
+    try {
+      const updatedRequest = await updateRequestStatus(id, 'Completado', auth.token);
+      updateRequestInList(updatedRequest);
+      toast.success('Solicitud aprobada con éxito.');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al aprobar la solicitud.');
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    if (!auth?.token) return toast.error('No estás autenticado.');
+    try {
+      const updatedRequest = await updateRequestStatus(id, 'Rechazado', auth.token);
+      updateRequestInList(updatedRequest);
+      toast.success('Solicitud rechazada con éxito.');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al rechazar la solicitud.');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!auth?.token) return toast.error('No estás autenticado.');
+    
+    if (window.confirm("¿Estás seguro de que quieres eliminar esta solicitud?")) {
+      try {
+        await deleteRequest(id, auth.token);
+        setRequests(requests.filter((req) => req.id !== id));
+        toast.success("Solicitud eliminada con éxito.");
+      } catch (error: any) {
+        toast.error(error.message || "Hubo un error al eliminar la solicitud.");
+      }
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
+      case 'Completado': return 'bg-green-100 text-green-800';
+      case 'Rechazado': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getFileIcon = (fileUrl: string) => {
+    const extension = fileUrl.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V9a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2z" />
+          </svg>
+        );
+      case 'doc':
+      case 'docx':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        );
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0011.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        );
+    }
+  };
+
+  if (isLoading) return <div className="text-center p-6">Cargando solicitudes...</div>;
+  if (error) return <div className="text-red-600 text-center p-6">{error}</div>;
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>
+      
+      {showControls && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+          <input
+            type="text"
+            name="customer_code"
+            placeholder="Filtrar por código..."
+            value={filters.customer_code}
+            onChange={handleFilterChange}
+            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <input
+            type="text"
+            name="contact_email"
+            placeholder="Filtrar por email..."
+            value={filters.contact_email}
+            onChange={handleFilterChange}
+            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos los estados</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Completado">Completado</option>
+            <option value="Rechazado">Rechazado</option>
+          </select>
+        </div>
+      )}
+
+      <div className="overflow-x-auto relative">
+        {isFetching && (
+          <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+          </div>
+        )}
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Código Cliente
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Fecha
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Adjuntos
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {requests.length > 0 ? (
+              requests.map((req) => (
+                <tr key={req.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.customer_code}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.contact_email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(req.status)}`}>
+                      {req.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(req.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <div className="flex items-center space-x-2">
+                      {req.attachments && req.attachments.length > 0 ? (
+                        req.attachments.map((att) => (
+                          <a
+                            key={att.id}
+                            href={`${process.env.NEXT_PUBLIC_API_URL}${att.file_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={att.original_filename || 'Descargar'}
+                            className="text-gray-500 hover:text-indigo-600"
+                          >
+                            {getFileIcon(att.file_url)}
+                          </a>
+                        ))
+                      ) : (
+                        <span className="text-gray-500">-</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center space-x-3">
+                      <button onClick={() => handleApprove(req.id)} title="Aprobar" className="text-green-600 hover:text-green-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <button onClick={() => handleReject(req.id)} title="Rechazar" className="text-red-600 hover:text-red-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <button onClick={() => router.push(`/requests/${req.id}/edit`)} title="Editar" className="text-blue-600 hover:text-blue-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                          <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <button onClick={() => handleDelete(req.id)} title="Eliminar" className="text-gray-600 hover:text-gray-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No hay solicitudes para mostrar.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {showControls && totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="py-2 px-4 border rounded-md disabled:opacity-50"
+          >
+            Anterior
+          </button>
+          <span>
+            Página {currentPage} de {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="py-2 px-4 border rounded-md disabled:opacity-50"
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default RequestList;
