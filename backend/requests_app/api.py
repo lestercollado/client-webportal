@@ -113,7 +113,7 @@ def create_request(request, customer_code: str = Form(...), contact_email: str =
         "customer_code": customer_code,
         "contact_email": contact_email,
         "notes": notes,
-        "role": customer_role,
+        "customer_role": customer_role,
     }
     user_request = UserRequest.objects.create(
         **data,
@@ -151,7 +151,7 @@ def update_request(
     if status is not None:
         user_request.status = status
     if customer_role is not None:
-        user_request.role = customer_role
+        user_request.customer_role = customer_role
     if notes is not None:
         user_request.notes = notes
         

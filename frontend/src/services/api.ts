@@ -4,6 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export interface UserRequest {
   id: number;
   customer_code: string;
+  customer_role: string;
   contact_email: string;
   notes?: string;
   status: string;
