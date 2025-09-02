@@ -6,3 +6,5 @@ django-cors-headers
 django-auth-ldap
 python-dotenv
 gunicorn
+celery
+redis
