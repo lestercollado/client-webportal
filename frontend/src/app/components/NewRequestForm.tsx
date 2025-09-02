@@ -5,6 +5,7 @@ import { createRequest } from '@/services/api';
 
 const NewRequestForm = () => {
   const [customerCode, setCustomerCode] = useState('');
+  const [customerRole, setCustomerRole] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -68,6 +69,7 @@ const NewRequestForm = () => {
     const formData = new FormData();
     formData.append('customer_code', customerCode);
     formData.append('contact_email', contactEmail);
+    formData.append('customer_role', customerRole);
     formData.append('notes', notes);
     attachments.forEach(file => {
       formData.append('attachments', file);
@@ -77,6 +79,7 @@ const NewRequestForm = () => {
       await createRequest(formData, auth.token);
       setMessage('¡Solicitud creada con éxito!');
       setCustomerCode('');
+      setCustomerRole('');
       setContactEmail('');
       setNotes('');
       setAttachments([]);
@@ -92,7 +95,7 @@ const NewRequestForm = () => {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Crear Nueva Solicitud</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="columns-2">
+        <div className="columns-3">
           <div>
             <label htmlFor="customerCode" className="block text-sm font-medium text-gray-700">
               Código del Cliente
@@ -102,6 +105,19 @@ const NewRequestForm = () => {
               id="customerCode"
               value={customerCode}
               onChange={(e) => setCustomerCode(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="customerRole" className="block text-sm font-medium text-gray-700">
+              Grupo
+            </label>
+            <input
+              type="text"
+              id="customerRole"
+              value={customerRole}
+              onChange={(e) => setCustomerRole(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               required
             />

@@ -9,12 +9,18 @@ class UserRequest(models.Model):
         ('Rechazado', 'Rechazado'),
         ('Completado', 'Completado'),
     ]
+    ROLE_CHOICES = [
+        ('Cliente Final', 'Cliente Final'),
+        ('Importador', 'Importador'),
+        ('Transportista', 'Transportista'),
+    ]
 
     customer_code = models.CharField(max_length=100, verbose_name="Código del Cliente")
     contact_email = models.EmailField(verbose_name="Correo Electrónico de Contacto")
     notes = models.TextField(verbose_name="Notas", blank=True, null=True)
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendiente', verbose_name="Estado")
+    role = models.CharField(max_length=100, choices=ROLE_CHOICES, default='Cliente Final', verbose_name="Grupo")
     
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_requests', verbose_name="Creado por")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")

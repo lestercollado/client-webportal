@@ -23,6 +23,7 @@ class UserRequestSchema(Schema):
     contact_email: str
     notes: Optional[str] = None
     status: str
+    customer_role: str
     created_at: datetime
     created_by_username: Optional[str] = None
     attachments: List[AttachmentSchema] = []
@@ -41,10 +42,12 @@ class UserRequestCreateSchema(Schema):
     customer_code: str
     contact_email: str
     notes: Optional[str] = None
+    customer_role: Optional[str] = None
 
 class UserRequestUpdateSchema(Schema):
     customer_code: Optional[str] = None
     contact_email: Optional[str] = None
+    customer_role: Optional[str] = None
     status: Optional[str] = None
 
 class StatsSchema(Schema):
