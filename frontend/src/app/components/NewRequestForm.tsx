@@ -74,7 +74,7 @@ const NewRequestForm = () => {
     });
 
     try {
-      await createRequest(formData, auth.token);
+      await createRequest(formData);
       setMessage('¡Solicitud creada con éxito!');
       setCustomerCode('');
       setContactEmail('');

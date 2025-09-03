@@ -62,7 +62,7 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
     }
 
     try {
-      await updateRequest(requestData.id, formData, auth.token);
+      await updateRequest(requestData.id, formData);
       toast.success("Solicitud actualizada con éxito.");
       router.push("/");
       router.refresh(); // To see the changes

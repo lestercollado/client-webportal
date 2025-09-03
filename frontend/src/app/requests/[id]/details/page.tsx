@@ -26,7 +26,7 @@ export default function RequestDetailsPage() {
 
   useEffect(() => {
     if (auth?.token && id) {
-      getRequestDetails(id, auth.token)
+      getRequestDetails(id)
         .then(data => {
           setRequest(data);
         })
