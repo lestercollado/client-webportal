@@ -1,7 +1,7 @@
 from typing import List, Optional
 from ninja import Router, File, UploadedFile, Form
 from django.shortcuts import get_object_or_404
-from .models import UserRequest, Attachment, TwoFactorAuth
+from .models import UserRequest, Attachment, TwoFactorAuth, RequestHistory
 from .schemas import UserRequestSchema, UserRequestCreateSchema, UserRequestUpdateSchema, StatsOut
 from django.db.models import Count, Q
 from ninja_jwt.authentication import JWTAuth
@@ -120,18 +120,31 @@ def create_request(request, customer_code: str = Form(...), contact_email: str =
         created_by=request.user if request.user.is_authenticated else None,
         created_from_ip=get_client_ip(request)
     )
+    
+    attached_files_names = []
     for attachment in attachments:
         Attachment.objects.create(
             user_request=user_request,
             file=attachment,
             original_filename=attachment.name
         )
+        attached_files_names.append(attachment.name)
+
+    # Log creation in history
+    action_log = f"Solicitud creada. Archivos adjuntos: {', '.join(attached_files_names)}"
+    RequestHistory.objects.create(
+        user_request=user_request,
+        changed_by=request.user if request.user.is_authenticated else None,
+        changed_from_ip=get_client_ip(request),
+        action=action_log
+    )
+    
     return user_request
 
 @router.put("/{request_id}", response=UserRequestSchema)
 def update_request(
-    request, 
-    request_id: int, 
+    request,
+    request_id: int,
     customer_code: str = Form(None),
     contact_email: str = Form(None),
     status: str = Form(None),
@@ -142,45 +155,79 @@ def update_request(
 ):
     """Updates an existing user request, including its attachments."""
     user_request = get_object_or_404(UserRequest, id=request_id)
+    changes = []
     
-    # Update text fields if they are provided
-    if customer_code is not None:
+    # Track if data other than status has changed
+    other_data_changed = False
+
+    # 1. Customer Code
+    if customer_code is not None and user_request.customer_code != customer_code:
+        changes.append(f"Código de cliente cambiado de '{user_request.customer_code}' a '{customer_code}'.")
         user_request.customer_code = customer_code
-    if contact_email is not None:
+        other_data_changed = True
+
+    # 2. Contact Email
+    if contact_email is not None and user_request.contact_email != contact_email:
+        changes.append(f"Email de contacto cambiado de '{user_request.contact_email}' a '{contact_email}'.")
         user_request.contact_email = contact_email
-    if status is not None:
-        user_request.status = status
-    if customer_role is not None:
-        user_request.customer_role = customer_role
-    if notes is not None:
+        other_data_changed = True
+
+    # 3. Notes
+    if notes is not None and user_request.notes != notes:
+        changes.append("Notas actualizadas.")
         user_request.notes = notes
-        
-    # Delete attachments if requested
+        other_data_changed = True
+
+    # 4. Delete Attachments
     if attachments_to_delete:
         try:
             delete_ids = json.loads(attachments_to_delete)
             if delete_ids:
                 attachments_to_remove = Attachment.objects.filter(id__in=delete_ids, user_request=user_request)
-                for att in attachments_to_remove:
-                    if att.file:
-                        if os.path.exists(att.file.path):
+                if attachments_to_remove.exists():
+                    deleted_filenames = [att.original_filename or "archivo sin nombre" for att in attachments_to_remove]
+                    changes.append(f"Archivos adjuntos eliminados: {', '.join(deleted_filenames)}.")
+                    for att in attachments_to_remove:
+                        if att.file and os.path.exists(att.file.path):
                             os.remove(att.file.path)
-                    att.delete()
+                        att.delete()
+                    other_data_changed = True
         except json.JSONDecodeError:
-            # Handle error if the string is not valid JSON
             pass
 
-    # Add new attachments if provided
+    # 5. Add New Attachments
     if attachments:
+        added_filenames = [att.name for att in attachments]
+        changes.append(f"Nuevos archivos adjuntos: {', '.join(added_filenames)}.")
         for attachment_file in attachments:
             Attachment.objects.create(
                 user_request=user_request,
                 file=attachment_file,
                 original_filename=attachment_file.name
             )
-            
-    user_request.save()
-    user_request.refresh_from_db()
+        other_data_changed = True
+
+    # 6. Status update logic
+    if other_data_changed and user_request.status != 'Pendiente':
+        changes.append(f"Estado cambiado de '{user_request.status}' a 'Pendiente' debido a otros cambios.")
+        user_request.status = 'Pendiente'
+    elif not other_data_changed and status is not None and user_request.status != status:
+        changes.append(f"Estado cambiado de '{user_request.status}' a '{status}'.")
+        user_request.status = status
+
+    # 7. Save and log history if there are changes
+    if changes:
+        user_request.save()
+        user_request.refresh_from_db()
+        
+        action_log = " ".join(changes)
+        RequestHistory.objects.create(
+            user_request=user_request,
+            changed_by=request.user if request.user.is_authenticated else None,
+            changed_from_ip=get_client_ip(request),
+            action=action_log
+        )
+        
     return user_request
 
 @router.delete("/{request_id}", response={204: None})
@@ -189,4 +236,13 @@ def delete_request(request, request_id: int):
     user_request = get_object_or_404(UserRequest, id=request_id)
     user_request.active = False
     user_request.save()
+
+    # Log deletion in history
+    RequestHistory.objects.create(
+        user_request=user_request,
+        changed_by=request.user if request.user.is_authenticated else None,
+        changed_from_ip=get_client_ip(request),
+        action="Solicitud eliminada (marcada como inactiva)."
+    )
+
     return 204, None

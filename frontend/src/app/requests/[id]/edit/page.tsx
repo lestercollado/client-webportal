@@ -5,9 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getRequestById, UserRequest } from '@/services/api';
 import Header from '@/app/components/Header';
-import EditRequestForm from '@/app/components/EditRequestForm'; // We will create this component
-import { toast } from 'sonner';
-
+import EditRequestForm from '@/app/components/EditRequestForm';
+import RequestHistory from '@/app/components/RequestHistory';
 export default function EditRequestPage() {
   const { auth, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -52,7 +51,11 @@ export default function EditRequestPage() {
             Editar Solicitud #{id}
           </h1>
           {request ? (
-            <EditRequestForm requestData={request} />
+            <>
+              <EditRequestForm requestData={request} />
+              {/* Integrar el componente de historial */}
+              <RequestHistory history={request.history || []} />
+            </>
           ) : (
             <p>No se encontraron datos de la solicitud.</p>
           )}

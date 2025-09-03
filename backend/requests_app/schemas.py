@@ -17,6 +17,19 @@ class AttachmentSchema(Schema):
     def resolve_original_filename(obj):
         return obj.original_filename
 
+class RequestHistorySchema(Schema):
+    id: int
+    action: str
+    changed_at: datetime
+    changed_by_username: Optional[str] = None
+    changed_from_ip: Optional[str] = None
+
+    @staticmethod
+    def resolve_changed_by_username(obj):
+        if obj.changed_by:
+            return obj.changed_by.username
+        return "System"
+
 class UserRequestSchema(Schema):
     id: int
     customer_code: str
@@ -27,6 +40,7 @@ class UserRequestSchema(Schema):
     created_at: datetime
     created_by_username: Optional[str] = None
     attachments: List[AttachmentSchema] = []
+    history: List[RequestHistorySchema] = []
 
     @staticmethod
     def resolve_created_by_username(obj):
@@ -37,6 +51,10 @@ class UserRequestSchema(Schema):
     @staticmethod
     def resolve_attachments(obj):
         return obj.attachments.all()
+
+    @staticmethod
+    def resolve_history(obj):
+        return obj.history.all()
 
 class UserRequestCreateSchema(Schema):
     customer_code: str
