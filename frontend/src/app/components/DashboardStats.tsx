@@ -15,7 +15,7 @@ const DashboardStats = () => {
       const fetchStats = async () => {
         try {
           setLoading(true);
-          const data = await getStats(auth.token);
+          const data = await getStats();
           setStats(data);
           setError(null);
         } catch (err) {
