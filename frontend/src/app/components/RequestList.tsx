@@ -258,14 +258,21 @@ const RequestList = ({
             onChange={handleFilterChange}
             className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          <input
-            type="text"
+          <select
             name="customer_role"
-            placeholder="Filtrar por grupo..."
             value={filters.customer_role}
             onChange={handleFilterChange}
             className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
+          >
+            <option value="">Todos los grupos</option>
+            <option value="Cliente Final">Cliente Final</option>
+              <option value="Importador">Importador</option>
+              <option value="Transportista">Transportista</option>
+              <option value="IMPORT-TRANSP">IMPORT-TRANSP</option>
+              <option value="NAV-INFO-OPER">NAV-INFO-OPER</option>
+              <option value="IMPORT-INFO-OPER">IMPORT-INFO-OPER</option>
+              <option value="Navieras">Navieras</option>
+          </select>
           <select
             name="status"
             value={filters.status}
