@@ -163,6 +163,12 @@ def update_request(
     # Track if data other than status has changed
     other_data_changed = False
 
+    # 1. Customer Role
+    if customer_role is not None and user_request.customer_role != customer_role:
+        changes.append(f"Grupo del cliente cambiado de '{user_request.customer_role}' a '{customer_role}'.")
+        user_request.customer_role = customer_role
+        other_data_changed = True
+
     # 1. Customer Code
     if customer_code is not None and user_request.customer_code != customer_code:
         changes.append(f"Código de cliente cambiado de '{user_request.customer_code}' a '{customer_code}'.")

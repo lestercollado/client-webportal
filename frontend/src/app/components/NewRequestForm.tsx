@@ -94,7 +94,7 @@ const NewRequestForm = () => {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Crear Nueva Solicitud</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="columns-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label htmlFor="customerCode" className="block text-sm font-medium text-gray-700">
               Código del Cliente
