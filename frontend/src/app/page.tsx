@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import RequestList from './components/RequestList';
@@ -11,12 +11,17 @@ import DashboardStats from './components/DashboardStats';
 export default function Home() {
   const { auth, loading } = useAuth();
   const router = useRouter();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!loading && !auth) {
       router.push('/login');
     }
   }, [auth, loading, router]);
+
+  const handleStatusChange = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   if (loading || !auth) {
     return (
@@ -31,7 +36,7 @@ export default function Home() {
       <div className="w-full max-w-6xl">
         <Header />
         
-        <DashboardStats />
+        <DashboardStats refreshTrigger={refreshTrigger} />
 
         <div className="flex justify-end mb-4">
           <Link href="/requests/new" className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -40,7 +45,7 @@ export default function Home() {
         </div>
 
         <div>
-          <RequestList limit={10} showControls={false} />
+          <RequestList limit={10} showControls={false} onStatusChange={handleStatusChange} />
         </div>
       </div>
     </main>
