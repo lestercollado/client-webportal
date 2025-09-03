@@ -4,11 +4,9 @@ import React from 'react';
 interface HistoryItem {
   id: number;
   action: string;
-  changed_by: {
-    username: string;
-  } | null;
+  changed_by_username?: string;
   changed_at: string;
-  changed_from_ip: string;
+  changed_from_ip?: string;
 }
 
 interface RequestHistoryProps {
@@ -37,7 +35,7 @@ const RequestHistory: React.FC<RequestHistoryProps> = ({ history }) => {
             {history.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50">
                 <td className="py-2 px-4 border-b">{item.action}</td>
-                <td className="py-2 px-4 border-b">{item.changed_by?.username || 'Sistema'}</td>
+                <td className="py-2 px-4 border-b">{item.changed_by_username || 'Sistema'}</td>
                 <td className="py-2 px-4 border-b">{new Date(item.changed_at).toLocaleString()}</td>
                 <td className="py-2 px-4 border-b">{item.changed_from_ip}</td>
               </tr>
