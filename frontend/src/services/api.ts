@@ -224,7 +224,7 @@ export const getStats = async (token: string): Promise<Stats> => {
 };
 
 export async function getRequestDetails(id: string, token?: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/requests/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/api/requests/${id}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
