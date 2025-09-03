@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getRequests, UserRequest, deleteRequest, updateRequestDetails } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import ConfirmationModal from './ConfirmationModal';
 
 interface RequestListProps {
   limit?: number;
@@ -50,6 +51,13 @@ const RequestList = ({
     status: '',
     customer_code: '',
     contact_email: ''
+  });
+
+  const [confirmationState, setConfirmationState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
   });
 
   const fetchRequests = async () => {
@@ -114,43 +122,62 @@ const RequestList = ({
   };
 
   const handleApprove = async (id: number) => {
-    if (!auth?.token) return toast.error('No estás autenticado.');
-    try {
-      const updatedRequest = await updateRequestDetails(id, { status: 'Completado' });
-      updateRequestInList(updatedRequest);
-      toast.success('Solicitud aprobada con éxito.');
-      if (onStatusChange) onStatusChange();
-    } catch (error: any) {
-      toast.error(error.message || 'Error al aprobar la solicitud.');
-    }
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Completado',
+      message: '¿Estás seguro de que quieres Completar esta solicitud?',
+      onConfirm: async () => {
+        if (!auth?.token) return toast.error('No estás autenticado.');
+        try {
+          const updatedRequest = await updateRequestDetails(id, { status: 'Completado' });
+          updateRequestInList(updatedRequest);
+          toast.success('Solicitud completada con éxito.');
+          if (onStatusChange) onStatusChange();
+        } catch (error: any) {
+          toast.error(error.message || 'Error al completar la solicitud.');
+        }
+        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+      },
+    });    
   };
 
-  const handleReject = async (id: number) => {
-    if (!auth?.token) return toast.error('No estás autenticado.');
-    if (window.confirm("¿Estás seguro de que quieres rechazar esta solicitud?")) {
-      try {
-        const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
-        updateRequestInList(updatedRequest);
-        toast.success('Solicitud rechazada con éxito.');
-        if (onStatusChange) onStatusChange();
-      } catch (error: any) {
-        toast.error(error.message || 'Error al rechazar la solicitud.');
-      }
-    }
+  const handleReject = (id: number) => {
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Rechazo',
+      message: '¿Estás seguro de que quieres rechazar esta solicitud?',
+      onConfirm: async () => {
+        if (!auth?.token) return toast.error('No estás autenticado.');
+        try {
+          const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
+          updateRequestInList(updatedRequest);
+          toast.success('Solicitud rechazada con éxito.');
+          if (onStatusChange) onStatusChange();
+        } catch (error: any) {
+          toast.error(error.message || 'Error al rechazar la solicitud.');
+        }
+        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+      },
+    });
   };
 
-  const handleDelete = async (id: number) => {
-    if (!auth?.token) return toast.error('No estás autenticado.');
-    
-    if (window.confirm("¿Estás seguro de que quieres eliminar esta solicitud?")) {
-      try {
-        await deleteRequest(id);
-        setRequests(requests.filter((req) => req.id !== id));
-        toast.success("Solicitud eliminada con éxito.");
-      } catch (error: any) {
-        toast.error(error.message || "Hubo un error al eliminar la solicitud.");
-      }
-    }
+  const handleDelete = (id: number) => {
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Eliminación',
+      message: '¿Estás seguro de que quieres eliminar esta solicitud?',
+      onConfirm: async () => {
+        if (!auth?.token) return toast.error('No estás autenticado.');
+        try {
+          await deleteRequest(id);
+          setRequests(requests.filter((req) => req.id !== id));
+          toast.success("Solicitud eliminada con éxito.");
+        } catch (error: any) {
+          toast.error(error.message || "Hubo un error al eliminar la solicitud.");
+        }
+        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+      },
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -199,8 +226,16 @@ const RequestList = ({
   if (error) return <div className="text-red-600 text-center p-6">{error}</div>;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>
+    <>
+      <ConfirmationModal
+        isOpen={confirmationState.isOpen}
+        onClose={() => setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+        onConfirm={confirmationState.onConfirm}
+        title={confirmationState.title}
+        message={confirmationState.message}
+      />
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>
       
       {showControls && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
@@ -368,6 +403,7 @@ const RequestList = ({
         </div>
       )}
     </div>
+    </>
   );
 };
 
