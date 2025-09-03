@@ -1,28 +1,5 @@
 import React from 'react';
-
-interface Attachment {
-  id: number;
-  file_url: string;
-  original_filename?: string;
-}
-
-interface HistoryItem {
-  id: number;
-  status: string;
-  note?: string;
-  created_at: string;
-}
-
-interface UserRequest {
-  id: number;
-  customer_code: string;
-  contact_email: string;
-  status: string;
-  created_at: string;
-  notes?: string;
-  attachments?: Attachment[];
-  history?: HistoryItem[];
-}
+import { UserRequest } from '@/services/api';
 
 interface Props {
   request: UserRequest;
@@ -74,9 +51,8 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
             {request.history.map(item => (
               <li key={item.id} className="mb-2">
                 <div>
-                  <span className="font-semibold">{item.status}</span> - {new Date(item.created_at).toLocaleString()}
+                  <span className="font-semibold">{item.action}</span> - {new Date(item.changed_at).toLocaleString()}
                 </div>
-                {item.note && <div className="text-gray-600 text-sm">Nota: {item.note}</div>}
               </li>
             ))}
           </ul>

@@ -224,11 +224,11 @@ export const getStats = async (token: string): Promise<Stats> => {
   return response.json();
 };
 
-export async function getRequestDetails(id: string, token?: string) {
+export async function getRequestDetails(id: number, token?: string) {
   const res = await fetch(`${API_BASE_URL}/api/requests/${id}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
+      'Authorization': `Bearer ${token}`,
     },
     cache: 'no-store',
   });
