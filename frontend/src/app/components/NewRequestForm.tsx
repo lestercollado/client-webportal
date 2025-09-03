@@ -123,6 +123,10 @@ const NewRequestForm = () => {
               <option value="Cliente Final">Cliente Final</option>
               <option value="Importador">Importador</option>
               <option value="Transportista">Transportista</option>
+              <option value="IMPORT-TRANSP">IMPORT-TRANSP</option>
+              <option value="NAV-INFO-OPER">NAV-INFO-OPER</option>
+              <option value="IMPORT-INFO-OPER">IMPORT-INFO-OPER</option>
+              <option value="Navieras">Navieras</option>
             </select>
           </div>
           <div>

@@ -13,6 +13,10 @@ class UserRequest(models.Model):
         ('Cliente Final', 'Cliente Final'),
         ('Importador', 'Importador'),
         ('Transportista', 'Transportista'),
+        ('IMPORT-TRANSP', 'IMPORT-TRANSP'),
+        ('NAV-INFO-OPER', 'NAV-INFO-OPER'),
+        ('IMPORT-INFO-OPER', 'IMPORT-INFO-OPER'),
+        ('Navieras', 'Navieras'),
     ]
 
     customer_code = models.CharField(max_length=100, verbose_name="Código del Cliente")
