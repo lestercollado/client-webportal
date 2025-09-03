@@ -3,6 +3,7 @@
 import { useState, useRef, ChangeEvent, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 const VerifyPage = () => {
   const [code, setCode] = useState<string[]>(['', '', '', '']);
@@ -46,6 +47,15 @@ const VerifyPage = () => {
   };
 
   return (
+  <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+              <Image src="/logo.png" alt="Logo Empresa" width={60} height={60} className="mx-auto" />
+              <h1 className="text-3xl font-bold text-gray-800 mt-4">
+                  Clientes v1.0
+              </h1>
+              <p className="text-gray-600">Por favor, inicie sesión para continuar</p>
+          </div>
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-900">Enter Verification Code</h2>
@@ -76,7 +86,8 @@ const VerifyPage = () => {
           </div>
         </form>
       </div>
-    </div>
+    </div></div>
+    </main>
   );
 };
 
