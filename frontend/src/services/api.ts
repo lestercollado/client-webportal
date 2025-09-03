@@ -14,6 +14,13 @@ export interface UserRequest {
     file_url: string;
     original_filename?: string;
   }[];
+  history: {
+    id: number;
+    action: string;
+    changed_at: string;
+    changed_by_username?: string;
+    changed_from_ip?: string;
+  }[];
 }
 
 export interface PaginatedRequests {

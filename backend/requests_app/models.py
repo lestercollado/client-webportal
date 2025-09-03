@@ -37,6 +37,21 @@ class Attachment(models.Model):
     def __str__(self):
         return f"Adjunto para la solicitud {self.user_request.id}"
 
+class RequestHistory(models.Model):
+    user_request = models.ForeignKey(UserRequest, related_name='history', on_delete=models.CASCADE, verbose_name="Solicitud de Usuario")
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Modificado por")
+    changed_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Modificación")
+    changed_from_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP de Modificación")
+    action = models.TextField(verbose_name="Acción")
+
+    def __str__(self):
+        return f"Historial de la solicitud {self.user_request.id} - {self.changed_at}"
+
+    class Meta:
+        verbose_name = "Historial de Solicitud"
+        verbose_name_plural = "Historial de Solicitudes"
+        ordering = ['-changed_at']
+
 class TwoFactorAuth(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=4)
