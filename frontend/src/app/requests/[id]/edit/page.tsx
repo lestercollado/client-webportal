@@ -25,7 +25,7 @@ export default function EditRequestPage() {
 
   useEffect(() => {
     if (auth?.token && id) {
-      getRequestById(id, auth.token)
+      getRequestById(id)
         .then(setRequest)
         .catch(err => {
           toast.error('No se pudo cargar la solicitud.');

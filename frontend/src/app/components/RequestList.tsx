@@ -67,7 +67,7 @@ const RequestList = ({
       if (filters.customer_code) params.append('customer_code', filters.customer_code);
       if (filters.contact_email) params.append('contact_email', filters.contact_email);
 
-      const data = await getRequests(auth.token, params);
+      const data = await getRequests(params);
       
       // Usar type guard para manejar ambos tipos de respuesta
       if (isPaginatedResponse(data)) {
@@ -114,7 +114,7 @@ const RequestList = ({
   const handleApprove = async (id: number) => {
     if (!auth?.token) return toast.error('No estás autenticado.');
     try {
-      const updatedRequest = await updateRequestStatus(id, 'Completado', auth.token);
+      const updatedRequest = await updateRequestStatus(id, 'Completado');
       updateRequestInList(updatedRequest);
       toast.success('Solicitud aprobada con éxito.');
     } catch (error: any) {
@@ -125,7 +125,7 @@ const RequestList = ({
   const handleReject = async (id: number) => {
     if (!auth?.token) return toast.error('No estás autenticado.');
     try {
-      const updatedRequest = await updateRequestStatus(id, 'Rechazado', auth.token);
+      const updatedRequest = await updateRequestStatus(id, 'Rechazado');
       updateRequestInList(updatedRequest);
       toast.success('Solicitud rechazada con éxito.');
     } catch (error: any) {
@@ -138,7 +138,7 @@ const RequestList = ({
     
     if (window.confirm("¿Estás seguro de que quieres eliminar esta solicitud?")) {
       try {
-        await deleteRequest(id, auth.token);
+        await deleteRequest(id);
         setRequests(requests.filter((req) => req.id !== id));
         toast.success("Solicitud eliminada con éxito.");
       } catch (error: any) {
