@@ -25,7 +25,7 @@ export default function Header() {
       </div>
       <div className="flex items-center">
         <span className="hidden sm:inline text-gray-700 mr-4">
-          Hola, {auth.user?.username || 'Usuario'}
+          Hola, {auth?.user?.username || 'Usuario'}
         </span>
         <button
           onClick={logout}
