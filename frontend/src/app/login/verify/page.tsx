@@ -47,17 +47,8 @@ const VerifyPage = () => {
   };
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4 overflow-hidden">
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: "url(/bg.png)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          opacity: 0.1,
-        }}
-      ></div>
-      <div className="relative z-10 w-full max-w-md">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
             <Image src="/logo.png" alt="Logo Empresa" width={60} height={60} className="mx-auto" />
             <h1 className="text-3xl font-bold text-gray-800 mt-4">
