@@ -51,13 +51,14 @@ export default function RequestDetailsPage() {
       <div className="w-full max-w-6xl">
         <Header />
         <div className="bg-white p-8 rounded-lg shadow-md">
+            <Link href="/requests" className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    &larr; Volver a Solicitudes
+            </Link>
             <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
                 <h1 className="text-2xl font-bold text-gray-800">
                     Detalles de la Solicitud #{id}
                 </h1>
-                <Link href="/requests" className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    &larr; Volver a Solicitudes
-                </Link>
+                
             </div>
           {request ? (
             <RequestDetails request={request} />
