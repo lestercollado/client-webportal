@@ -223,3 +223,19 @@ export const getStats = async (token: string): Promise<Stats> => {
   }
   return response.json();
 };
+
+export async function getRequestDetails(id: string, token?: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/requests/${id}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error('No se pudo obtener la solicitud');
+  }
+
+  return res.json();
+}
