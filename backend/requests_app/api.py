@@ -2,7 +2,7 @@ from typing import List, Optional
 from ninja import Router, File, UploadedFile, Form
 from django.shortcuts import get_object_or_404
 from .models import UserRequest, Attachment, TwoFactorAuth, RequestHistory
-from .schemas import UserRequestSchema, UserRequestCreateSchema, UserRequestUpdateSchema, StatsOut
+from .schemas import UserRequestSchema, UserRequestCreateSchema, UserRequestUpdateSchema, StatsOut, UserRequestListSchema
 from django.db.models import Count, Q
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.tokens import RefreshToken
@@ -81,7 +81,7 @@ def get_stats(request):
     )
     return stats
 
-@router.get("/", response=List[UserRequestSchema])
+@router.get("/", response=List[UserRequestListSchema])
 def list_requests(
     request,
     status: Optional[str] = None,
@@ -89,7 +89,7 @@ def list_requests(
     contact_email: Optional[str] = None
 ):
     """Lists all active user requests, with optional filters."""
-    qs = UserRequest.objects.filter(active=True)
+    qs = UserRequest.objects.filter(active=True).prefetch_related('attachments')
     
     if status:
         qs = qs.filter(status=status)
@@ -103,7 +103,10 @@ def list_requests(
 @router.get("/{request_id}", response=UserRequestSchema)
 def get_request(request, request_id: int):
     """Retrieves a single user request by its ID."""
-    user_request = get_object_or_404(UserRequest, id=request_id)
+    user_request = get_object_or_404(
+        UserRequest.objects.prefetch_related('attachments', 'history', 'history__changed_by'),
+        id=request_id
+    )
     return user_request
 
 @router.post("/", response=UserRequestSchema)

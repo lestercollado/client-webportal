@@ -30,7 +30,7 @@ class RequestHistorySchema(Schema):
             return obj.changed_by.username
         return "System"
 
-class UserRequestSchema(Schema):
+class UserRequestListSchema(Schema):
     id: int
     customer_code: str
     contact_email: str
@@ -39,17 +39,19 @@ class UserRequestSchema(Schema):
     created_at: datetime
     created_by_username: Optional[str] = None
     attachments: List[AttachmentSchema] = []
-    history: List[RequestHistorySchema] = []
 
     @staticmethod
     def resolve_created_by_username(obj):
         if obj.created_by:
             return obj.created_by.username
         return None
-    
+
     @staticmethod
     def resolve_attachments(obj):
         return obj.attachments.all()
+
+class UserRequestSchema(UserRequestListSchema):
+    history: List[RequestHistorySchema] = []
 
     @staticmethod
     def resolve_history(obj):
