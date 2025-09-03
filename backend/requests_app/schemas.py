@@ -69,6 +69,7 @@ class UserRequestUpdateSchema(Schema):
     contact_email: Optional[str] = None
     customer_role: Optional[str] = None
     status: Optional[str] = None
+    notes: Optional[str] = None
 
 class StatsSchema(Schema):
     pending: int
