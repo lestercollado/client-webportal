@@ -5,6 +5,15 @@ interface Props {
   request: UserRequest;
 }
 
+const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
+      case 'Completado': return 'bg-green-100 text-green-800';
+      case 'Rechazado': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
 const RequestDetails: React.FC<Props> = ({ request }) => {
   return (
     <div>
@@ -19,7 +28,11 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Estado</p>
-          <p className="text-lg font-semibold text-gray-900">{request.status}</p>
+          <p className="text-lg font-semibold text-gray-900">
+            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(request.status)}`}>
+                {request.status}
+            </span>
+          </p>
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Fecha de Creación</p>
