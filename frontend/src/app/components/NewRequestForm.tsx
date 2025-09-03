@@ -2,6 +2,8 @@
 import { useState, FormEvent, DragEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { createRequest } from '@/services/api';
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const NewRequestForm = () => {
   const [customerCode, setCustomerCode] = useState('');
@@ -14,6 +16,7 @@ const NewRequestForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const { auth } = useAuth();
+  const router = useRouter();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -77,13 +80,9 @@ const NewRequestForm = () => {
 
     try {
       await createRequest(formData);
-      setMessage('¡Solicitud creada con éxito!');
-      setCustomerCode('');
-      setCustomerRole('');
-      setContactEmail('');
-      setNotes('');
-      setAttachments([]);
-      window.dispatchEvent(new Event('requestCreated'));
+      toast.success("Solicitud creada con éxito.");
+      router.push("/");
+      router.refresh()
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al crear la solicitud.');
     } finally {
