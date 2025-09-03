@@ -47,10 +47,12 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
   const headers = new Headers(options.headers || {});
   
-  // Añadir token si existe y no es un FormData
-  if (token && !(options.body instanceof FormData)) {
+  // Añadir token si existe
+  if (token) {
     headers.append('Authorization', `Bearer ${token}`);
   }
+  
+  // El navegador establece el Content-Type automáticamente para FormData
   if (!(options.body instanceof FormData)) {
       headers.append('Content-Type', 'application/json');
   }
@@ -141,10 +143,10 @@ export const getRequestById = async (id: number): Promise<UserRequest> => {
   return response.json();
 };
 
-export const updateRequestStatus = async (id: number, status: 'Completado' | 'Rechazado'): Promise<UserRequest> => {
-  const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}/status`, {
+export const updateRequestDetails = async (id: number, data: { status?: 'Completado' | 'Rechazado'; notes?: string }): Promise<UserRequest> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(data),
   });
 
   if (!response.ok) {
@@ -197,21 +199,4 @@ export async function getRequestDetails(id: number) {
   }
 
   return res.json();
-}
-
-export async function updateRequestStatusWithNotes(
-  id: number,
-  status: 'Completado' | 'Rechazado',
-  notes: string
-): Promise<UserRequest> {
-  const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}/status`, {
-    method: 'PUT',
-    body: JSON.stringify({ status, notes }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Error al actualizar el estado' }));
-    throw new Error(errorBody.detail || 'Error desconocido');
-  }
-  return response.json();
 }

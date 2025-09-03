@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getRequests, UserRequest, deleteRequest, updateRequestStatus } from '@/services/api';
+import { getRequests, UserRequest, deleteRequest, updateRequestDetails } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -114,7 +114,7 @@ const RequestList = ({
   const handleApprove = async (id: number) => {
     if (!auth?.token) return toast.error('No estás autenticado.');
     try {
-      const updatedRequest = await updateRequestStatus(id, 'Completado');
+      const updatedRequest = await updateRequestDetails(id, { status: 'Completado' });
       updateRequestInList(updatedRequest);
       toast.success('Solicitud aprobada con éxito.');
     } catch (error: any) {
@@ -123,13 +123,15 @@ const RequestList = ({
   };
 
   const handleReject = async (id: number) => {
-    if (!auth?.token) return toast.error('No estás autenticado.');
-    try {
-      const updatedRequest = await updateRequestStatus(id, 'Rechazado');
-      updateRequestInList(updatedRequest);
-      toast.success('Solicitud rechazada con éxito.');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al rechazar la solicitud.');
+    if (confirm('¿Está seguro de que desea rechazar esta solicitud?')) {
+      try {
+        const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
+        onUpdateRequest(updatedRequest);
+        toast.success('Solicitud rechazada con éxito');
+      } catch (error) {
+        console.error('Error al rechazar la solicitud:', error);
+        toast.error('Error al rechazar la solicitud');
+      }
     }
   };
 
