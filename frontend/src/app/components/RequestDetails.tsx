@@ -23,6 +23,10 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
           <p className="text-lg text-gray-900">{request.customer_code}</p>
         </div>
         <div>
+          <p className="text-sm font-medium text-gray-500">Grupo</p>
+          <p className="text-lg text-gray-900">{request.customer_role}</p>
+        </div>
+        <div>
           <p className="text-sm font-medium text-gray-500">Email de Contacto</p>
           <p className="text-lg text-gray-900">{request.contact_email}</p>
         </div>

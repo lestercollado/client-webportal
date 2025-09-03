@@ -86,7 +86,8 @@ def list_requests(
     request,
     status: Optional[str] = None,
     customer_code: Optional[str] = None,
-    contact_email: Optional[str] = None
+    contact_email: Optional[str] = None,
+    customer_role: Optional[str] = None
 ):
     """Lists all active user requests, with optional filters."""
     qs = UserRequest.objects.filter(active=True).prefetch_related('attachments')
@@ -97,6 +98,8 @@ def list_requests(
         qs = qs.filter(customer_code__icontains=customer_code)
     if contact_email:
         qs = qs.filter(contact_email__icontains=contact_email)
+    if customer_role:
+        qs = qs.filter(customer_role__icontains=customer_role)
         
     return qs.order_by('-created_at')
 

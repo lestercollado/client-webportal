@@ -50,7 +50,8 @@ const RequestList = ({
   const [filters, setFilters] = useState({
     status: '',
     customer_code: '',
-    contact_email: ''
+    contact_email: '',
+    customer_role: ''
   });
 
   const [confirmationState, setConfirmationState] = useState({
@@ -76,6 +77,7 @@ const RequestList = ({
       if (filters.status) params.append('status', filters.status);
       if (filters.customer_code) params.append('customer_code', filters.customer_code);
       if (filters.contact_email) params.append('contact_email', filters.contact_email);
+      if (filters.customer_role) params.append('customer_role', filters.customer_role);
 
       const data = await getRequests(params);
       
@@ -256,6 +258,14 @@ const RequestList = ({
             onChange={handleFilterChange}
             className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
+          <input
+            type="text"
+            name="customer_role"
+            placeholder="Filtrar por grupo..."
+            value={filters.customer_role}
+            onChange={handleFilterChange}
+            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
           <select
             name="status"
             value={filters.status}
@@ -283,6 +293,9 @@ const RequestList = ({
                 Código Cliente
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Grupo
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -304,6 +317,7 @@ const RequestList = ({
               requests.map((req) => (
                 <tr key={req.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.customer_code}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.customer_role}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.contact_email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(req.status)}`}>
