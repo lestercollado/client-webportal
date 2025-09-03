@@ -54,7 +54,6 @@ const VerifyPage = () => {
               <h1 className="text-3xl font-bold text-gray-800 mt-4">
                   Clientes v1.0
               </h1>
-              <p className="text-gray-600">Por favor, inicie sesión para continuar</p>
           </div>
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
