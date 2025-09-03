@@ -111,3 +111,11 @@ Una vez que los contenedores estén en funcionamiento, podrás acceder a los ser
 ├── run_backend_setup.bat # Script para configuración inicial en Windows
 └── README.md        # Este archivo
 ```
+
+## Para actualizar cambios en el frontend
+  - cd frontend
+  - npm run build
+  - pm2 restart clientes-frontend
+
+## Para actualizar cambios en el backend
+  - systemctl restart clientes-backend
