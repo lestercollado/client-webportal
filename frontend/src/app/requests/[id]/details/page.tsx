@@ -47,7 +47,7 @@ export default function RequestDetailsPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start p-6 md:p-12 bg-gray-50">
+    <main className="flex min-h-screen flex-col items-center justify-start p-6 md:p-12">
       <div className="w-full max-w-6xl">
         <Header />
         <div className="flex justify-end mb-4">
