@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { getRequestDetails, UserRequest } from '@/services/api';
 import RequestDetails from '@/app/components/RequestDetails';
+import Header from '@/app/components/Header';
 import { toast } from 'sonner';
 
 export default function RequestDetailsPage() {
@@ -46,11 +48,17 @@ export default function RequestDetailsPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-6 md:p-12 bg-gray-50">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-6xl">
+        <Header />
+        <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-gray-800">
+                Detalles de la Solicitud #{id}
+            </h1>
+            <Link href="/requests" className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                &larr; Volver a Solicitudes
+            </Link>
+        </div>
         <div className="bg-white p-8 rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">
-            Detalles de la Solicitud #{id}
-          </h1>
           {request ? (
             <RequestDetails request={request} />
           ) : (
