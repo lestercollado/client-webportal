@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import ldap
 from django_auth_ldap.config import LDAPSearch, ActiveDirectoryGroupType, LDAPGroupQuery
-
+from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -138,8 +138,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ninja JWT Configuration
 NINJA_JWT = {
-    "ACCESS_TOKEN_EXPIRE_MINUTES": 60,
-    "REFRESH_TOKEN_EXPIRE_DAYS": 7,
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
     "AUTH_HEADER_TYPES": ("Bearer",),
