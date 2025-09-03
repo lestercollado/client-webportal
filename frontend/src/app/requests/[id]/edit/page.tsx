@@ -45,7 +45,7 @@ export default function EditRequestPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-6 md:p-12 bg-gray-50">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-6xl">
         <Header />
         <div className="bg-white p-8 rounded-lg shadow-md">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">
