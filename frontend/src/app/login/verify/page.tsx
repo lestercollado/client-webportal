@@ -54,12 +54,11 @@ const VerifyPage = () => {
               <h1 className="text-3xl font-bold text-gray-800 mt-4">
                   Clientes v1.0
               </h1>
-              <p className="text-gray-600">Por favor, inicie sesión para continuar</p>
           </div>
     <div className="flex items-center justify-center">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Enter Verification Code</h2>
-        <p className="text-center text-gray-600">A 4-digit code has been sent to your email.</p>
+        <h2 className="text-2xl font-bold text-center text-gray-900">Ingresa el código de verificación</h2>
+        <p className="text-center text-gray-600">Se ha enviado un código de 4 dígitos a tu correo electrónico.</p>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex justify-center space-x-4">
             {code.map((digit, index) => (
@@ -81,7 +80,7 @@ const VerifyPage = () => {
               type="submit"
               className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Verify
+              Verificar
             </button>
           </div>
         </form>
