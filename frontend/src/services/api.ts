@@ -144,9 +144,16 @@ export const getRequestById = async (id: number): Promise<UserRequest> => {
 };
 
 export const updateRequestDetails = async (id: number, data: { status?: 'Completado' | 'Rechazado'; notes?: string }): Promise<UserRequest> => {
+  const formData = new FormData();
+  if (data.status) {
+      formData.append('status', data.status);
+  }
+  if (data.notes) {
+      formData.append('notes', data.notes);
+  }
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: formData,
   });
 
   if (!response.ok) {
