@@ -10,6 +10,7 @@ interface RequestListProps {
   limit?: number;
   showControls?: boolean;
   title?: string;
+  onStatusChange?: () => void;
 }
 
 // Interfaz para la respuesta paginada
@@ -33,7 +34,8 @@ function isPaginatedResponse(data: any): data is PaginatedRequests {
 const RequestList = ({ 
   limit, 
   showControls = true, 
-  title = "Últimas Solicitudes"
+  title = "Últimas Solicitudes",
+  onStatusChange
 }: RequestListProps) => {
   const [requests, setRequests] = useState<UserRequest[]>([]);
   const [error, setError] = useState('');
@@ -117,6 +119,7 @@ const RequestList = ({
       const updatedRequest = await updateRequestDetails(id, { status: 'Completado' });
       updateRequestInList(updatedRequest);
       toast.success('Solicitud aprobada con éxito.');
+      if (onStatusChange) onStatusChange();
     } catch (error: any) {
       toast.error(error.message || 'Error al aprobar la solicitud.');
     }
@@ -129,6 +132,7 @@ const RequestList = ({
         const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
         updateRequestInList(updatedRequest);
         toast.success('Solicitud rechazada con éxito.');
+        if (onStatusChange) onStatusChange();
       } catch (error: any) {
         toast.error(error.message || 'Error al rechazar la solicitud.');
       }
