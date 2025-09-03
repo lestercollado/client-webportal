@@ -56,7 +56,7 @@ const VerifyPage = () => {
               </h1>
               <p className="text-gray-600">Por favor, inicie sesión para continuar</p>
           </div>
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-900">Enter Verification Code</h2>
         <p className="text-center text-gray-600">A 4-digit code has been sent to your email.</p>
