@@ -96,19 +96,7 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
           onChange={(e) => setContactEmail(e.target.value)}
           className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm"
         />
-      </div>
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-          Notas
-        </label>
-        <textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={4}
-          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
+      </div>      
       
       {/* Existing Attachments */}
       {existingAttachments.length > 0 && (
@@ -203,7 +191,18 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
           </div>
         </div>
       </div>
-
+      <div>
+        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+          Notas
+        </label>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={4}
+          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm"
+        />
+      </div>
       <div className="flex justify-end">
         <button
           type="button"
