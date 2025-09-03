@@ -123,14 +123,14 @@ const RequestList = ({
   };
 
   const handleReject = async (id: number) => {
-    if (confirm('¿Está seguro de que desea rechazar esta solicitud?')) {
+    if (!auth?.token) return toast.error('No estás autenticado.');
+    if (window.confirm("¿Estás seguro de que quieres rechazar esta solicitud?")) {
       try {
         const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
-        onUpdateRequest(updatedRequest);
-        toast.success('Solicitud rechazada con éxito');
-      } catch (error) {
-        console.error('Error al rechazar la solicitud:', error);
-        toast.error('Error al rechazar la solicitud');
+        updateRequestInList(updatedRequest);
+        toast.success('Solicitud rechazada con éxito.');
+      } catch (error: any) {
+        toast.error(error.message || 'Error al rechazar la solicitud.');
       }
     }
   };
