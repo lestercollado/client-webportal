@@ -11,7 +11,7 @@ interface RequestListProps {
   limit?: number;
   showControls?: boolean;
   title?: string;
-  onStatusChange?: () => void;
+  onDataChange?: () => void;
 }
 
 // Interfaz para la respuesta paginada
@@ -36,7 +36,7 @@ const RequestList = ({
   limit, 
   showControls = true, 
   title = "Últimas Solicitudes",
-  onStatusChange
+  onDataChange
 }: RequestListProps) => {
   const [requests, setRequests] = useState<UserRequest[]>([]);
   const [error, setError] = useState('');
@@ -132,7 +132,7 @@ const RequestList = ({
           const updatedRequest = await updateRequestDetails(id, { status: 'Completado' });
           updateRequestInList(updatedRequest);
           toast.success('Solicitud completada con éxito.');
-          if (onStatusChange) onStatusChange();
+          if (onDataChange) onDataChange();
         } catch (error: any) {
           toast.error(error.message || 'Error al completar la solicitud.');
         }
@@ -152,7 +152,7 @@ const RequestList = ({
           const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
           updateRequestInList(updatedRequest);
           toast.success('Solicitud rechazada con éxito.');
-          if (onStatusChange) onStatusChange();
+          if (onDataChange) onDataChange();
         } catch (error: any) {
           toast.error(error.message || 'Error al rechazar la solicitud.');
         }
@@ -172,6 +172,7 @@ const RequestList = ({
           await deleteRequest(id);
           setRequests(requests.filter((req) => req.id !== id));
           toast.success("Solicitud eliminada con éxito.");
+          if (onDataChange) onDataChange();
         } catch (error: any) {
           toast.error(error.message || "Hubo un error al eliminar la solicitud.");
         }

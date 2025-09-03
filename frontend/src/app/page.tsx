@@ -19,7 +19,7 @@ export default function Home() {
     }
   }, [auth, loading, router]);
 
-  const handleStatusChange = () => {
+  const handleDataChange = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
@@ -45,7 +45,7 @@ export default function Home() {
         </div>
 
         <div>
-          <RequestList limit={10} showControls={false} onStatusChange={handleStatusChange} />
+          <RequestList limit={10} showControls={false} onDataChange={handleDataChange} />
         </div>
       </div>
     </main>
