@@ -7,55 +7,93 @@ interface Props {
 
 const RequestDetails: React.FC<Props> = ({ request }) => {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="mb-4">
-        <strong>Código Cliente:</strong> {request.customer_code}
-      </div>
-      <div className="mb-4">
-        <strong>Email:</strong> {request.contact_email}
-      </div>
-      <div className="mb-4">
-        <strong>Estado:</strong> {request.status}
-      </div>
-      <div className="mb-4">
-        <strong>Fecha de creación:</strong> {new Date(request.created_at).toLocaleString()}
-      </div>
-      {request.notes && (
-        <div className="mb-4">
-          <strong>Notas:</strong> {request.notes}
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <p className="text-sm font-medium text-gray-500">Código Cliente</p>
+          <p className="text-lg text-gray-900">{request.customer_code}</p>
         </div>
-      )}
+        <div>
+          <p className="text-sm font-medium text-gray-500">Email de Contacto</p>
+          <p className="text-lg text-gray-900">{request.contact_email}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Estado</p>
+          <p className="text-lg font-semibold text-gray-900">{request.status}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Fecha de Creación</p>
+          <p className="text-lg text-gray-900">{new Date(request.created_at).toLocaleString()}</p>
+        </div>
+        {request.notes && (
+          <div className="md:col-span-2">
+            <p className="text-sm font-medium text-gray-500">Notas Adicionales</p>
+            <p className="text-lg text-gray-900 whitespace-pre-wrap">{request.notes}</p>
+          </div>
+        )}
+      </div>
+
       {request.attachments && request.attachments.length > 0 && (
-        <div className="mb-4">
-          <strong>Adjuntos:</strong>
-          <ul className="list-disc ml-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Archivos Adjuntos</h3>
+          <ul className="list-disc list-inside bg-gray-50 p-4 rounded-md">
             {request.attachments.map(att => (
               <li key={att.id}>
                 <a
                   href={`${process.env.NEXT_PUBLIC_API_URL}${att.file_url}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-600 underline"
+                  className="text-indigo-600 hover:underline"
                 >
-                  {att.original_filename || att.file_url}
+                  {att.original_filename || `Archivo ${att.id}`}
                 </a>
               </li>
             ))}
           </ul>
         </div>
       )}
+
       {request.history && request.history.length > 0 && (
         <div>
-          <strong>Historial:</strong>
-          <ul className="mt-2 border-l-2 border-indigo-200 pl-4">
-            {request.history.map(item => (
-              <li key={item.id} className="mb-2">
-                <div>
-                  <span className="font-semibold">{item.action}</span> - {new Date(item.changed_at).toLocaleString()}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Historial de Cambios</h3>
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fecha del cambio
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acción
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Usuario
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    IP
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {request.history.map(item => (
+                  <tr key={item.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {new Date(item.changed_at).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.action}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {item.changed_by_username || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {item.changed_from_ip || 'N/A'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
