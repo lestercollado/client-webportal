@@ -94,16 +94,16 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {request.history.map(item => (
                   <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600">
                       {new Date(item.changed_at).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 break-words max-w-md">
                       {item.action}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600">
                       {item.changed_by_username || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600">
                       {item.changed_from_ip || 'N/A'}
                     </td>
                   </tr>
