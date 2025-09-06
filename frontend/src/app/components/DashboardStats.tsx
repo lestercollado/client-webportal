@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { getStats, Stats } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 
-const DashboardStats = () => {
+interface DashboardStatsProps {
+  refreshTrigger?: any;
+}
+
+const DashboardStats = ({ refreshTrigger }: DashboardStatsProps) => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +19,7 @@ const DashboardStats = () => {
       const fetchStats = async () => {
         try {
           setLoading(true);
-          const data = await getStats(auth.token);
+          const data = await getStats();
           setStats(data);
           setError(null);
         } catch (err) {
@@ -28,7 +32,7 @@ const DashboardStats = () => {
 
       fetchStats();
     }
-  }, [auth?.token]);
+  }, [auth?.token, refreshTrigger]);
 
   if (loading) {
     return (

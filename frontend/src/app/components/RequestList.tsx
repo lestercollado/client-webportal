@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getRequests, UserRequest, deleteRequest, updateRequestStatus } from '@/services/api';
+import { getRequests, UserRequest, deleteRequest, updateRequestDetails } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import ConfirmationModal from './ConfirmationModal';
 
 interface RequestListProps {
   limit?: number;
   showControls?: boolean;
   title?: string;
+  onDataChange?: () => void;
 }
 
 // Interfaz para la respuesta paginada
@@ -33,7 +35,8 @@ function isPaginatedResponse(data: any): data is PaginatedRequests {
 const RequestList = ({ 
   limit, 
   showControls = true, 
-  title = "Últimas Solicitudes"
+  title = "Últimas Solicitudes",
+  onDataChange
 }: RequestListProps) => {
   const [requests, setRequests] = useState<UserRequest[]>([]);
   const [error, setError] = useState('');
@@ -47,7 +50,15 @@ const RequestList = ({
   const [filters, setFilters] = useState({
     status: '',
     customer_code: '',
-    contact_email: ''
+    contact_email: '',
+    customer_role: ''
+  });
+
+  const [confirmationState, setConfirmationState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
   });
 
   const fetchRequests = async () => {
@@ -66,8 +77,9 @@ const RequestList = ({
       if (filters.status) params.append('status', filters.status);
       if (filters.customer_code) params.append('customer_code', filters.customer_code);
       if (filters.contact_email) params.append('contact_email', filters.contact_email);
+      if (filters.customer_role) params.append('customer_role', filters.customer_role);
 
-      const data = await getRequests(auth.token, params);
+      const data = await getRequests(params);
       
       // Usar type guard para manejar ambos tipos de respuesta
       if (isPaginatedResponse(data)) {
@@ -112,39 +124,63 @@ const RequestList = ({
   };
 
   const handleApprove = async (id: number) => {
-    if (!auth?.token) return toast.error('No estás autenticado.');
-    try {
-      const updatedRequest = await updateRequestStatus(id, 'Completado', auth.token);
-      updateRequestInList(updatedRequest);
-      toast.success('Solicitud aprobada con éxito.');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al aprobar la solicitud.');
-    }
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Completado',
+      message: '¿Estás seguro de que quieres Completar esta solicitud?',
+      onConfirm: async () => {
+        if (!auth?.token) return toast.error('No estás autenticado.');
+        try {
+          const updatedRequest = await updateRequestDetails(id, { status: 'Completado' });
+          updateRequestInList(updatedRequest);
+          toast.success('Solicitud completada con éxito.');
+          if (onDataChange) onDataChange();
+        } catch (error: any) {
+          toast.error(error.message || 'Error al completar la solicitud.');
+        }
+        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+      },
+    });    
   };
 
-  const handleReject = async (id: number) => {
-    if (!auth?.token) return toast.error('No estás autenticado.');
-    try {
-      const updatedRequest = await updateRequestStatus(id, 'Rechazado', auth.token);
-      updateRequestInList(updatedRequest);
-      toast.success('Solicitud rechazada con éxito.');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al rechazar la solicitud.');
-    }
+  const handleReject = (id: number) => {
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Rechazo',
+      message: '¿Estás seguro de que quieres rechazar esta solicitud?',
+      onConfirm: async () => {
+        if (!auth?.token) return toast.error('No estás autenticado.');
+        try {
+          const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
+          updateRequestInList(updatedRequest);
+          toast.success('Solicitud rechazada con éxito.');
+          if (onDataChange) onDataChange();
+        } catch (error: any) {
+          toast.error(error.message || 'Error al rechazar la solicitud.');
+        }
+        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+      },
+    });
   };
 
-  const handleDelete = async (id: number) => {
-    if (!auth?.token) return toast.error('No estás autenticado.');
-    
-    if (window.confirm("¿Estás seguro de que quieres eliminar esta solicitud?")) {
-      try {
-        await deleteRequest(id, auth.token);
-        setRequests(requests.filter((req) => req.id !== id));
-        toast.success("Solicitud eliminada con éxito.");
-      } catch (error: any) {
-        toast.error(error.message || "Hubo un error al eliminar la solicitud.");
-      }
-    }
+  const handleDelete = (id: number) => {
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Eliminación',
+      message: '¿Estás seguro de que quieres eliminar esta solicitud?',
+      onConfirm: async () => {
+        if (!auth?.token) return toast.error('No estás autenticado.');
+        try {
+          await deleteRequest(id);
+          setRequests(requests.filter((req) => req.id !== id));
+          toast.success("Solicitud eliminada con éxito.");
+          if (onDataChange) onDataChange();
+        } catch (error: any) {
+          toast.error(error.message || "Hubo un error al eliminar la solicitud.");
+        }
+        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+      },
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -193,8 +229,16 @@ const RequestList = ({
   if (error) return <div className="text-red-600 text-center p-6">{error}</div>;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>
+    <>
+      <ConfirmationModal
+        isOpen={confirmationState.isOpen}
+        onClose={() => setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+        onConfirm={confirmationState.onConfirm}
+        title={confirmationState.title}
+        message={confirmationState.message}
+      />
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>
       
       {showControls && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
@@ -214,6 +258,21 @@ const RequestList = ({
             onChange={handleFilterChange}
             className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
+          <select
+            name="customer_role"
+            value={filters.customer_role}
+            onChange={handleFilterChange}
+            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos los grupos</option>
+            <option value="Cliente Final">Cliente Final</option>
+              <option value="Importador">Importador</option>
+              <option value="Transportista">Transportista</option>
+              <option value="IMPORT-TRANSP">IMPORT-TRANSP</option>
+              <option value="NAV-INFO-OPER">NAV-INFO-OPER</option>
+              <option value="IMPORT-INFO-OPER">IMPORT-INFO-OPER</option>
+              <option value="Navieras">Navieras</option>
+          </select>
           <select
             name="status"
             value={filters.status}
@@ -241,6 +300,9 @@ const RequestList = ({
                 Código Cliente
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Grupo
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -262,6 +324,7 @@ const RequestList = ({
               requests.map((req) => (
                 <tr key={req.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.customer_code}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.customer_role}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.contact_email}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(req.status)}`}>
@@ -314,6 +377,17 @@ const RequestList = ({
                           <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                       </button>
+                      {/* Botón Detalles */}
+                      <button
+                        onClick={() => router.push(`/requests/${req.id}/details`)}
+                        title="Ver detalles"
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -351,6 +425,7 @@ const RequestList = ({
         </div>
       )}
     </div>
+    </>
   );
 };
 

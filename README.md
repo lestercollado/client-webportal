@@ -4,15 +4,18 @@ Este proyecto es una aplicación web full-stack diseñada para gestionar las sol
 
 ## Características Principales
 
-- **Autenticación de Usuarios:** Sistema de inicio de sesión seguro (preparado para LDAP).
-- **Gestión de Solicitudes:**
-  - Creación de nuevas solicitudes con los campos requeridos (código de cliente, email, etc.).
-  - Carga de archivos adjuntos (`.jpg`, `.png`, `.pdf`, `.doc`/`.docx`).
-  - Visualización del listado de solicitudes.
-  - Edición de solicitudes existentes.
-- **Seguimiento de Estado:** Cada solicitud tiene un estado que puede ser `Pendiente`, `Rechazado` o `Completado`.
-- **Auditoría:** Se registra quién, cuándo y desde qué dirección IP se crea cada solicitud.
-- **Desarrollo Containerizado:** El proyecto completo se puede desplegar y ejecutar fácilmente usando Docker y Docker Compose.
+- **Autenticación Segura de Dos Factores (2FA):** Sistema de inicio de sesión robusto con usuario/contraseña y un segundo factor de autenticación mediante un código de 4 dígitos enviado al correo electrónico del usuario.
+- **Gestión Avanzada de Solicitudes:**
+  - **Dashboard Interactivo:** Visualización rápida de estadísticas clave (Total, Pendientes, Completadas, Rechazadas).
+  - **Creación de Solicitudes:** Formulario intuitivo para crear nuevas solicitudes con campos para código de cliente, email y notas.
+  - **Carga de Múltiples Archivos:** Soporte para adjuntar varios documentos (`.jpg`, `.png`, `.pdf`, `.doc`/`.docx`) en una sola solicitud.
+  - **Listado y Filtrado:** Vista de todas las solicitudes con paginación y filtros dinámicos por estado, código de cliente o email.
+  - **Flujo de Aprobación:** Los administradores pueden aprobar o rechazar solicitudes con un solo clic.
+  - **Modales de Confirmación:** Modales personalizados para acciones críticas como rechazar o eliminar una solicitud, mejorando la experiencia de usuario.
+- **Auditoría Completa:**
+  - **Historial de Cambios:** Cada solicitud tiene un registro detallado de todas las acciones realizadas sobre ella.
+  - **Trazabilidad:** Se guarda quién, cuándo y desde qué dirección IP se creó o modificó una solicitud.
+- **Desarrollo y Despliegue Containerizado:** El proyecto está completamente configurado para ejecutarse con Docker y Docker Compose, facilitando la instalación y la portabilidad.
 
 ---
 
@@ -22,8 +25,9 @@ Este proyecto es una aplicación web full-stack diseñada para gestionar las sol
 
 - **Framework:** Django
 - **API:** Django Ninja
-- **Autenticación:** Preparado para `django-auth-ldap`
-- **Servidor:** WSGI
+- **Autenticación:** `django-ninja-jwt` para tokens JWT.
+- **Tareas Asíncronas:** Celery con Redis para el envío de correos electrónicos en segundo plano.
+- **Base de Datos:** PostgreSQL
 - **Lenguaje:** Python
 
 ### Frontend
@@ -32,7 +36,7 @@ Este proyecto es una aplicación web full-stack diseñada para gestionar las sol
 - **Librería UI:** React
 - **Lenguaje:** TypeScript
 - **Estilos:** Tailwind CSS
-- **Comunicación API:** Fetch API / Axios
+- **Gestión de Estado:** React Context API
 
 ### Despliegue
 
@@ -107,3 +111,11 @@ Una vez que los contenedores estén en funcionamiento, podrás acceder a los ser
 ├── run_backend_setup.bat # Script para configuración inicial en Windows
 └── README.md        # Este archivo
 ```
+
+## Para actualizar cambios en el frontend
+  - cd frontend
+  - npm run build
+  - pm2 restart clientes-frontend
+
+## Para actualizar cambios en el backend
+  - systemctl restart clientes-backend

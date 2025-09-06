@@ -2,9 +2,12 @@
 import { useState, FormEvent, DragEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { createRequest } from '@/services/api';
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const NewRequestForm = () => {
   const [customerCode, setCustomerCode] = useState('');
+  const [customerRole, setCustomerRole] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -13,6 +16,7 @@ const NewRequestForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const { auth } = useAuth();
+  const router = useRouter();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -68,19 +72,17 @@ const NewRequestForm = () => {
     const formData = new FormData();
     formData.append('customer_code', customerCode);
     formData.append('contact_email', contactEmail);
+    formData.append('customer_role', customerRole);
     formData.append('notes', notes);
     attachments.forEach(file => {
       formData.append('attachments', file);
     });
 
     try {
-      await createRequest(formData, auth.token);
-      setMessage('¡Solicitud creada con éxito!');
-      setCustomerCode('');
-      setContactEmail('');
-      setNotes('');
-      setAttachments([]);
-      window.dispatchEvent(new Event('requestCreated'));
+      await createRequest(formData);
+      toast.success("Solicitud creada con éxito.");
+      router.push("/");
+      router.refresh()
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al crear la solicitud.');
     } finally {
@@ -92,45 +94,55 @@ const NewRequestForm = () => {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Crear Nueva Solicitud</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="customerCode" className="block text-sm font-medium text-gray-700">
-            Código del Cliente
-          </label>
-          <input
-            type="text"
-            id="customerCode"
-            value={customerCode}
-            onChange={(e) => setCustomerCode(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            required
-          />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="customerCode" className="block text-sm font-medium text-gray-700">
+              Código del Cliente
+            </label>
+            <input
+              type="text"
+              id="customerCode"
+              value={customerCode}
+              onChange={(e) => setCustomerCode(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="customerRole" className="block text-sm font-medium text-gray-700">
+              Grupo
+            </label>
+            <select
+              id="customerRole"
+              value={customerRole}
+              onChange={(e) => setCustomerRole(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            >
+              <option value="">Selecciona un grupo</option>
+              <option value="Cliente Final">Cliente Final</option>
+              <option value="Importador">Importador</option>
+              <option value="Transportista">Transportista</option>
+              <option value="IMPORT-TRANSP">IMPORT-TRANSP</option>
+              <option value="NAV-INFO-OPER">NAV-INFO-OPER</option>
+              <option value="IMPORT-INFO-OPER">IMPORT-INFO-OPER</option>
+              <option value="Navieras">Navieras</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
+              Correo Electrónico de Contacto
+            </label>
+            <input
+              type="email"
+              id="contactEmail"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            />
+          </div>          
         </div>
-        <div>
-          <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
-            Correo Electrónico de Contacto
-          </label>
-          <input
-            type="email"
-            id="contactEmail"
-            value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-            Notas
-          </label>
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-        </div>
-        
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Adjuntar Planillas
@@ -175,7 +187,18 @@ const NewRequestForm = () => {
             </ul>
           </div>
         )}
-
+        <div>
+          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+            Notas
+          </label>
+          <textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={4}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          />
+        </div>
         <div>
           <button
             type="submit"

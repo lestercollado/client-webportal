@@ -40,7 +40,7 @@ const RequestForm = () => {
     formData.append('attachment', attachment);
 
     try {
-      await createRequest(formData, auth.token);
+      await createRequest(formData);
       setMessage('¡Solicitud creada con éxito!');
       // Limpiar formulario
       setCustomerCode('');

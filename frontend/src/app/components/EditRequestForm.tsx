@@ -18,6 +18,7 @@ interface EditRequestFormProps {
 
 export default function EditRequestForm({ requestData }: EditRequestFormProps) {
   const [customerCode, setCustomerCode] = useState(requestData.customer_code);
+  const [customerRole, setCustomerRole] = useState(requestData.customer_role);
   const [contactEmail, setContactEmail] = useState(requestData.contact_email);
   const [notes, setNotes] = useState(requestData.notes || '');
   const [existingAttachments, setExistingAttachments] = useState<Attachment[]>(requestData.attachments);
@@ -48,6 +49,7 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
 
     const formData = new FormData();
     formData.append("customer_code", customerCode);
+    formData.append("customer_role", customerRole);
     formData.append("contact_email", contactEmail);
     formData.append("notes", notes);
     
@@ -62,7 +64,7 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
     }
 
     try {
-      await updateRequest(requestData.id, formData, auth.token);
+      await updateRequest(requestData.id, formData);
       toast.success("Solicitud actualizada con éxito.");
       router.push("/");
       router.refresh(); // To see the changes
@@ -86,6 +88,27 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
         />
       </div>
       <div>
+            <label htmlFor="customerRole" className="block text-sm font-medium text-gray-700">
+              Grupo
+            </label>
+            <select
+              id="customerRole"
+              value={customerRole}
+              onChange={(e) => setCustomerRole(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            >
+              <option value="">Selecciona un grupo</option>
+              <option value="Cliente Final">Cliente Final</option>
+              <option value="Importador">Importador</option>
+              <option value="Transportista">Transportista</option>
+              <option value="IMPORT-TRANSP">IMPORT-TRANSP</option>
+              <option value="NAV-INFO-OPER">NAV-INFO-OPER</option>
+              <option value="IMPORT-INFO-OPER">IMPORT-INFO-OPER</option>
+              <option value="Navieras">Navieras</option>
+            </select>
+          </div>
+      <div>
         <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
           Correo Electrónico de Contacto
         </label>
@@ -96,19 +119,7 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
           onChange={(e) => setContactEmail(e.target.value)}
           className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm"
         />
-      </div>
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-          Notas
-        </label>
-        <textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={4}
-          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
+      </div>      
       
       {/* Existing Attachments */}
       {existingAttachments.length > 0 && (
@@ -203,7 +214,18 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
           </div>
         </div>
       </div>
-
+      <div>
+        <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+          Notas
+        </label>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={4}
+          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm"
+        />
+      </div>
       <div className="flex justify-end">
         <button
           type="button"

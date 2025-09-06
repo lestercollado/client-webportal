@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Portal de Solicitud de Usuarios",
+  title: "Clientes v1.0",
   description: "Aplicación para la solicitud de creación de usuarios.",
 };
 
@@ -18,7 +18,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={inter.className}>
+      <body className={`${inter.className} relative`}>
+        <div
+          className="absolute inset-0 z-[-1]"
+          style={{
+            backgroundImage: "url(/bg.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.1,
+          }}
+        ></div>
         <AuthProvider>
           {children}
           <Toaster />
