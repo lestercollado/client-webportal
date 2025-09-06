@@ -22,6 +22,10 @@ COPY . .
 # Exponer el puerto en el que correrá la aplicación
 EXPOSE 8000
 
-# Comando para correr la aplicación (ejemplo con Django)
-# Asegúrate de crear el archivo manage.py en tu proyecto
-# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Copiar el entrypoint y hacerlo ejecutable
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Usar el entrypoint y el CMD por defecto
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
