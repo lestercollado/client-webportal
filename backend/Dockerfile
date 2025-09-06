@@ -9,7 +9,12 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # Instalar dependencias del sistema operativo si son necesarias
-# RUN apt-get update && apt-get install -y ...
+RUN apt-get update && apt-get install -y \
+    libsasl2-dev \
+    libldap2-dev \
+    libssl-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias de Python
 # Copiar primero el archivo de requerimientos para aprovechar el cache de Docker
