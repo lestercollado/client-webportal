@@ -300,19 +300,16 @@ const RequestList = ({
                 Código Cliente
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Grupo
+                Empresa
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
+                Adjuntos
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Estado
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fecha
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Adjuntos
+                Enviada
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acciones
@@ -324,8 +321,28 @@ const RequestList = ({
               requests.map((req) => (
                 <tr key={req.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.customer_code}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.customer_role}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.contact_email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.company_name}</td>                
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <div className="flex items-center space-x-2">
+                      {req.uploaded_files && req.uploaded_files.length > 0 ? (
+                        req.uploaded_files.map((att) => (
+                          console.log(att),
+                          <a
+                            key={att}
+                            href={`https://www.tcmariel.cu/wp-content/uploads/users-webportal/${att}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={att || 'Descargar'}
+                            className="text-gray-500 hover:text-indigo-600"
+                          >
+                            {getFileIcon(att)}
+                          </a>
+                        ))
+                      ) : (
+                        <span className="text-gray-500">-</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(req.status)}`}>
                       {req.status}
@@ -333,26 +350,6 @@ const RequestList = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(req.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex items-center space-x-2">
-                      {req.attachments && req.attachments.length > 0 ? (
-                        req.attachments.map((att) => (
-                          <a
-                            key={att.id}
-                            href={`${process.env.NEXT_PUBLIC_API_URL}${att.file_url}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={att.original_filename || 'Descargar'}
-                            className="text-gray-500 hover:text-indigo-600"
-                          >
-                            {getFileIcon(att.file_url)}
-                          </a>
-                        ))
-                      ) : (
-                        <span className="text-gray-500">-</span>
-                      )}
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-3">

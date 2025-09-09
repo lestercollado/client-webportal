@@ -1,27 +1,55 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // --- Tipos de Datos ---
-export interface UserRequest {
+export interface Attachment {
   id: number;
-  customer_code: string;
-  customer_role: string;
-  contact_email: string;
-  notes?: string;
-  status: string;
-  created_at: string;
-  created_by_username?: string;
-  attachments: {
-    id: number;
-    file_url: string;
-    original_filename?: string;
-  }[];
-  history: {
+  file_url: string;
+  original_filename: string;
+}
+
+export interface RequestHistory {
     id: number;
     action: string;
     changed_at: string;
     changed_by_username?: string;
     changed_from_ip?: string;
-  }[];
+}
+
+export interface AuthorizedPerson {
+    id: number;
+    name: string;
+    position: string;
+    phone: string;
+    email?: string;
+    informational: boolean;
+    operational: boolean;
+    associated_with: string;
+}
+
+export interface UserRequest {
+  id: number;
+  status: string;
+  created_at: string;
+  attachments: Attachment[];
+  history: RequestHistory[];
+  notes?: string;
+  authorized_persons: AuthorizedPerson[];
+  created_by_username?: string;
+  created_from_ip: string;
+  
+  // Fields from backend schema
+  company_name: string;
+  address: string;
+  city: string;
+  state: string;
+  phone: string;
+  email: string;
+  tax_id: string;
+
+  contact_name: string;
+  contact_position: string;
+  contact_phone: string;
+  contact_email: string;
 }
 
 export interface PaginatedRequests {

@@ -14,42 +14,90 @@ const getStatusBadge = (status: string) => {
     }
   };
 
+const DetailItem: React.FC<{ label: string; value?: string | null }> = ({ label, value }) => (
+    <div>
+        <p className="text-sm font-medium text-gray-500">{label}</p>
+        <p className="text-lg text-gray-900">{value || 'N/A'}</p>
+    </div>
+);
+
 const RequestDetails: React.FC<Props> = ({ request }) => {
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <p className="text-sm font-medium text-gray-500">Código Cliente</p>
-          <p className="text-lg text-gray-900">{request.customer_code}</p>
+      {/* Company Details */}
+      <div className="mb-6 pb-6 border-b border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">Detalles de la Empresa</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <DetailItem label="Nombre de la Empresa" value={request.company_name} />
+            <DetailItem label="NIT" value={request.tax_id} />
+            <DetailItem label="Teléfono" value={request.phone} />
+            <DetailItem label="Email" value={request.email} />
+            <DetailItem label="Dirección" value={`${request.address}, ${request.city}, ${request.state}`} />
         </div>
-        <div>
-          <p className="text-sm font-medium text-gray-500">Grupo</p>
-          <p className="text-lg text-gray-900">{request.customer_role}</p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-500">Email de Contacto</p>
-          <p className="text-lg text-gray-900">{request.contact_email}</p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-500">Estado</p>
-          <p className="text-lg font-semibold text-gray-900">
-            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(request.status)}`}>
-                {request.status}
-            </span>
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-gray-500">Fecha de Creación</p>
-          <p className="text-lg text-gray-900">{new Date(request.created_at).toLocaleString()}</p>
-        </div>
-        {request.notes && (
-          <div className="md:col-span-2">
-            <p className="text-sm font-medium text-gray-500">Notas Adicionales</p>
-            <p className="text-lg text-gray-900 whitespace-pre-wrap">{request.notes}</p>
-          </div>
-        )}
       </div>
 
+      {/* Contact Details */}
+      <div className="mb-6 pb-6 border-b border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">Persona de Contacto</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <DetailItem label="Nombre" value={request.contact_name} />
+            <DetailItem label="Cargo" value={request.contact_position} />
+            <DetailItem label="Teléfono" value={request.contact_phone} />
+            <DetailItem label="Email" value={request.contact_email} />
+        </div>
+      </div>
+
+      {/* Request Status and Metadata */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div>
+            <p className="text-sm font-medium text-gray-500">Estado</p>
+            <p className="text-lg font-semibold text-gray-900">
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(request.status)}`}>
+                    {request.status}
+                </span>
+            </p>
+        </div>
+        <DetailItem label="Fecha de Creación" value={new Date(request.created_at).toLocaleString()} />
+        <DetailItem label="Creado por" value={request.created_by_username ?? 'WebTCM'} />
+        <DetailItem label="IP de Origen" value={request.created_from_ip} />
+      </div>
+
+        {request.notes && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Notas Adicionales</h3>
+            <p className="text-lg text-gray-900 whitespace-pre-wrap bg-gray-50 p-4 rounded-md">{request.notes}</p>
+          </div>
+        )}
+
+      {/* Authorized Persons */}
+      {request.authorized_persons && request.authorized_persons.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Personas Autorizadas</h3>
+          <ul className="divide-y divide-gray-200 border border-gray-200 rounded-md">
+            {request.authorized_persons.map(person => (
+              <li key={person.id} className="px-4 py-4 hover:bg-gray-50">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-2">
+                    <div className="sm:col-span-1">
+                        <p className="text-sm font-bold text-gray-800">{person.name}</p>
+                        <p className="text-xs text-gray-500">{person.position}</p>
+                    </div>
+                    <div className="sm:col-span-1">
+                        <p className="text-sm text-gray-600">{person.email || 'N/A'}</p>
+                        <p className="text-sm text-gray-600">{person.phone}</p>
+                    </div>
+                    <div className="sm:col-span-1 flex items-center space-x-4">
+                        {person.informational && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Informativo</span>}
+                        {person.operational && <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Operacional</span>}
+                    </div>
+                </div>
+                {person.associated_with && <p className="text-xs text-gray-500 mt-2">Asociado con: {person.associated_with}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Attachments */}
       {request.attachments && request.attachments.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Archivos Adjuntos</h3>
@@ -58,6 +106,7 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
               <li key={att.id}>
                 <a
                   href={`${process.env.NEXT_PUBLIC_API_URL}${att.file_url}`}
+                  download={att.original_filename}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-600 hover:underline"
@@ -70,6 +119,7 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
         </div>
       )}
 
+      {/* History */}
       {request.history && request.history.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Historial de Cambios</h3>

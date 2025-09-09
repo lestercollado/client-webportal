@@ -3,49 +3,69 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 import datetime
 
+from django.db import models
+from django.contrib.auth.models import User
+
+
 class UserRequest(models.Model):
     STATUS_CHOICES = [
         ('Pendiente', 'Pendiente'),
         ('Rechazado', 'Rechazado'),
         ('Completado', 'Completado'),
     ]
-    ROLE_CHOICES = [
-        ('Cliente Final', 'Cliente Final'),
-        ('Importador', 'Importador'),
-        ('Transportista', 'Transportista'),
-        ('IMPORT-TRANSP', 'IMPORT-TRANSP'),
-        ('NAV-INFO-OPER', 'NAV-INFO-OPER'),
-        ('IMPORT-INFO-OPER', 'IMPORT-INFO-OPER'),
-        ('Navieras', 'Navieras'),
-    ]
 
-    customer_code = models.CharField(max_length=100, verbose_name="Código del Cliente")
-    contact_email = models.EmailField(verbose_name="Correo Electrónico de Contacto")
-    notes = models.TextField(verbose_name="Notas", blank=True, null=True)
-    
+    # Datos de la empresa
+    company_name = models.CharField(max_length=255, verbose_name="Nombre de la Empresa")
+    address = models.TextField(verbose_name="Dirección")
+    city = models.CharField(max_length=100, verbose_name="Ciudad")
+    state = models.CharField(max_length=100, verbose_name="Provincia/Estado")
+    phone = models.CharField(max_length=20, verbose_name="Teléfono")
+    email = models.EmailField(verbose_name="Correo Electrónico")
+    tax_id = models.CharField(max_length=50, verbose_name="NIT / Registro Fiscal")
+
+    # Datos de contacto principal
+    contact_name = models.CharField(max_length=150, verbose_name="Nombre del Contacto")
+    contact_position = models.CharField(max_length=100, verbose_name="Cargo del Contacto")
+    contact_phone = models.CharField(max_length=20, verbose_name="Teléfono del Contacto")
+    contact_email = models.EmailField(verbose_name="Correo Electrónico del Contacto")
+
+    # Campos de control
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendiente', verbose_name="Estado")
-    customer_role = models.CharField(max_length=100, choices=ROLE_CHOICES, default='Cliente Final', verbose_name="Grupo")
     
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_requests', verbose_name="Creado por")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     created_from_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP de Creación")
     active = models.BooleanField(default=True, verbose_name="Activo")
 
+    # Archivos cargados (guardados en JSON o en relación aparte)
+    uploaded_files = models.JSONField(default=list, blank=True, verbose_name="Archivos Subidos")
+
     def __str__(self):
-        return f"Solicitud de {self.customer_code} - {self.status}"
+        return f"Solicitud de {self.company_name} - {self.status}"
 
     class Meta:
         verbose_name = "Solicitud de Usuario"
         verbose_name_plural = "Solicitudes de Usuario"
         ordering = ['-created_at']
 
-class Attachment(models.Model):
-    user_request = models.ForeignKey(UserRequest, related_name='attachments', on_delete=models.CASCADE)
-    file = models.FileField(upload_to='attachments/')
-    original_filename = models.CharField(max_length=255, null=True, blank=True)
+
+class AuthorizedPerson(models.Model):
+    user_request = models.ForeignKey(UserRequest, on_delete=models.CASCADE, related_name="authorized_persons", verbose_name="Solicitud")
+    name = models.CharField(max_length=150, verbose_name="Nombre")
+    position = models.CharField(max_length=100, verbose_name="Cargo")
+    phone = models.CharField(max_length=20, verbose_name="Teléfono")
+    email = models.EmailField(blank=True, null=True, verbose_name="Correo Electrónico")
+    informational = models.BooleanField(default=False, verbose_name="Acceso Informativo")
+    operational = models.BooleanField(default=False, verbose_name="Acceso Operativo")
+    associated_with = models.CharField(max_length=100, verbose_name="Asociado a")
 
     def __str__(self):
-        return f"Adjunto para la solicitud {self.user_request.id}"
+        return f"{self.name} ({self.position})"
+
+    class Meta:
+        verbose_name = "Persona Autorizada"
+        verbose_name_plural = "Personas Autorizadas"
+
 
 class RequestHistory(models.Model):
     user_request = models.ForeignKey(UserRequest, related_name='history', on_delete=models.CASCADE, verbose_name="Solicitud de Usuario")
