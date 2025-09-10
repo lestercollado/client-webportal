@@ -40,11 +40,11 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
   initialCustomerRole,
 }) => {
   const [customerCode, setCustomerCode] = useState(initialCustomerCode);
-  const [customerRole, setCustomerRole] = useState<string[]>(initialCustomerRole);
+  const [customerRole, setCustomerRole] = useState<string[]>(initialCustomerRole || []);
 
   useEffect(() => {
     setCustomerCode(initialCustomerCode);
-    setCustomerRole(initialCustomerRole);
+    setCustomerRole(initialCustomerRole || []);
   }, [initialCustomerCode, initialCustomerRole]);
 
   if (!isOpen) return null;
@@ -96,7 +96,9 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!customerCode || !customerCode.trim() || customerRole.length === 0}
+            disabled={
+              !customerCode || !customerCode.trim() || (customerRole?.length ?? 0) === 0
+            }
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed"
           >
             Confirmar y Aprobar

@@ -1,6 +1,8 @@
 from typing import List, Optional
 from ninja import Router
 from django.shortcuts import get_object_or_404
+import oracledb
+from django.conf import settings
 from .models import UserRequest, RequestHistory, AuthorizedPerson, TwoFactorAuth
 from .schemas import (
     UserRequestSchema,
@@ -20,7 +22,9 @@ from django.contrib.auth import authenticate
 from ninja.schema import Schema
 from .tasks import send_2fa_email_task
 import random
+import uuid
 import string
+import hashlib
 from datetime import datetime, timezone, timedelta
 import requests
 import json
@@ -35,6 +39,21 @@ def get_client_ip(request):
     else:
         ip = request.META.get("REMOTE_ADDR")
     return ip
+
+
+def generate_user_cod(contact_name: str) -> str:
+    parts = contact_name.split()
+    if not parts:
+        return ""
+
+    first_name = parts[0]
+    last_name_initials = ""
+    if len(parts) > 1:
+        for part in parts[1:]:
+            if part: # Ensure part is not empty
+                last_name_initials += part[0]
+
+    return (first_name + last_name_initials).upper()
 
 
 # Routers
@@ -269,6 +288,93 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
             user_request.status = "Completado"
             changes.append(f"Estado cambiado a '{user_request.status}'.")
 
+    # Handle customer_role explicitly
+    if "customer_role" in payload.dict(exclude_unset=True):
+        new_customer_role = payload.customer_role if payload.customer_role is not None else []
+        if user_request.customer_role != new_customer_role:
+            user_request.customer_role = new_customer_role
+            changes.append(f"customer_role cambiado de '{user_request.customer_role}' a '{new_customer_role}'.")
+
+    connection = None
+    cursor = None
+    try:
+        oracle_user = settings.ORACLE_DB_USER
+        oracle_password = settings.ORACLE_DB_PASSWORD
+        oracle_host = settings.ORACLE_DB_HOST
+        oracle_port = settings.ORACLE_DB_PORT
+        oracle_service_name = settings.ORACLE_DB_SERVICE_NAME
+
+        dsn = f"{oracle_host}:{oracle_port}/{oracle_service_name}"
+        oracledb.init_oracle_client()
+        connection = oracledb.connect(user=oracle_user, password=oracle_password, dsn=dsn)
+        cursor = connection.cursor()
+        
+        print("222222222",user_request)
+        print("44444",user_request.customer_role)
+        # Insert each authorized person into Oracle DB
+        if user_request.customer_code: # Only proceed if customer_code is available
+            insert_sql = """
+            INSERT INTO CM_WEB.WEB_USER (
+                USER_COD, USER_NAM, COMPANY_COD, TELEPHONE, USER_PWD, EMAIL, ADDRESS, REC_TIM, REC_NAM
+            ) VALUES (
+                :user_cod, :user_nam, :company_cod, :telephone, :user_pwd, :email, :address, :rec_tim, :rec_nam
+            )
+            """
+            for person in user_request.authorized_persons.all():
+                generated_user_cod = generate_user_cod(person.name)
+                try:
+                    cursor.execute(insert_sql, {
+                        'user_cod': generated_user_cod,
+                        'user_nam': person.name,
+                        'company_cod': user_request.customer_code,
+                        'telephone': person.phone,
+                        'user_pwd': hashlib.md5(''.join(random.choices(string.ascii_letters + string.digits, k=10)).encode()).hexdigest(), # Generate a random password for each user and hash it with MD5
+                        'email': person.email,
+                        'address': user_request.address,
+                        'rec_tim': user_request.created_at,
+                        'rec_nam': 'SYSTEM WEB'
+                    })
+                    print(f"Successfully inserted authorized person {person.name} for request {user_request.id} into Oracle DB.")
+
+                    # Insert into RE_USER_ROLE for each customer_role
+                    if user_request.customer_role:
+                        insert_role_sql = """
+                        INSERT INTO CM_WEB.RE_USER_ROLE (ID, USER_COD, ROLE_COD) VALUES (:id, :user_cod, :role_cod)
+                        """
+                        for role in user_request.customer_role:
+                            try:
+                                cursor.execute(insert_role_sql, {
+                                    'id': str(uuid.uuid4()),
+                                    'user_cod': generated_user_cod,
+                                    'role_cod': role
+                                })
+                                print(f"Successfully inserted role {role} for user {generated_user_cod} into RE_USER_ROLE.")
+                            except oracledb.Error as e:
+                                error_obj, = e.args
+                                print(f"Error inserting role {role} for user {generated_user_cod} into RE_USER_ROLE: {error_obj.message}")
+                    else:
+                        print(f"No customer roles found for request {user_request.id}, skipping RE_USER_ROLE insertion for user {generated_user_cod}.")
+                except oracledb.Error as e:
+                    error_obj, = e.args
+                    print(f"Error inserting authorized person {person.name} into Oracle DB: {error_obj.message}")
+            connection.commit()
+            print(11111100000000)
+            print(f"All authorized persons for request {user_request.id} processed for Oracle DB.")
+        else:
+            print("customer_code is empty, skipping Oracle insertion for authorized persons.")
+
+    except oracledb.Error as e:
+        error_obj, = e.args
+        print(f"Error inserting into Oracle DB: {error_obj.message}")
+        # Optionally, you might want to revert the Django save or log this error more formally
+        # For now, we'll just print and continue, but in a real app, this needs careful handling.
+    except Exception as e:
+        print(f"An unexpected error occurred during Oracle insertion: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
     if changes:
         try:
@@ -316,7 +422,7 @@ def approve_request(request, request_id: int, payload: ApproveRequestSchema):
         return 400, {"message": "Request is already completed."}
 
     user_request.status = "Completado"
-    user_request.customer_role = payload.customer_role
+    user_request.customer_role = payload.customer_role if payload.customer_role is not None else []
     user_request.customer_code = payload.customer_code
     user_request.save()
 
@@ -324,7 +430,7 @@ def approve_request(request, request_id: int, payload: ApproveRequestSchema):
         user_request=user_request,
         changed_by=request.user if request.user.is_authenticated else None,
         changed_from_ip=get_client_ip(request),
-        action="Solicitud aprobada y marcada como completada.",
+        action=f"Solicitud aprobada y marcada como completada. Roles asignados: {user_request.customer_role}",
     )
 
     return user_request

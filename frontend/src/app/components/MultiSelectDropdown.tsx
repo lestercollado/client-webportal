@@ -27,9 +27,10 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
   }, []);
 
   const handleOptionClick = (option: string) => {
-    const newSelection = selectedOptions.includes(option)
-      ? selectedOptions.filter((item) => item !== option)
-      : [...selectedOptions, option];
+    const currentSelected = selectedOptions ?? []; // Ensure it's an array
+    const newSelection = currentSelected.includes(option)
+      ? currentSelected.filter((item) => item !== option)
+      : [...currentSelected, option];
     onChange(newSelection);
   };
 
@@ -41,7 +42,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="block truncate">
-          {selectedOptions.length > 0 ? selectedOptions.join(', ') : `Seleccionar ${label}`}
+          {selectedOptions?.length > 0 ? selectedOptions.join(', ') : `Seleccionar ${label}`}
         </span>
         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
           <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -55,7 +56,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, sele
           {options.map((option) => (
             <div
               key={option}
-              className={`relative cursor-default select-none py-2 pl-3 pr-9 ${selectedOptions.includes(option) ? 'bg-indigo-600 text-white' : 'text-gray-900'} hover:bg-indigo-600 hover:text-white`}
+              className={`relative cursor-default select-none py-2 pl-3 pr-9 ${(selectedOptions ?? []).includes(option) ? 'bg-indigo-600 text-white' : 'text-gray-900'} hover:bg-indigo-600 hover:text-white`}
               onClick={() => handleOptionClick(option)}
             >
               <span className="block truncate">{option}</span>
