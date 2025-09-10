@@ -274,25 +274,25 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
     return user_request
 
 
-@router.delete("/{request_id}", response={204: None, 400: MessageOut})
-def delete_request(request, request_id: int):
-    """Soft deletes a user request by setting its active flag to False."""
-    user_request = get_object_or_404(UserRequest, id=request_id)
+# @router.delete("/{request_id}", response={204: None, 400: MessageOut})
+# def delete_request(request, request_id: int):
+#     """Soft deletes a user request by setting its active flag to False."""
+#     user_request = get_object_or_404(UserRequest, id=request_id)
     
-    if user_request.status == "Completado":
-        return 400, {"message": "Cannot delete a completed request."}
+#     if user_request.status == "Completado":
+#         return 400, {"message": "Cannot delete a completed request."}
         
-    user_request.active = False
-    user_request.save()
+#     user_request.active = False
+#     user_request.save()
 
-    RequestHistory.objects.create(
-        user_request=user_request,
-        changed_by=request.user if request.user.is_authenticated else None,
-        changed_from_ip=get_client_ip(request),
-        action="Solicitud eliminada (marcada como inactiva).",
-    )
+#     RequestHistory.objects.create(
+#         user_request=user_request,
+#         changed_by=request.user if request.user.is_authenticated else None,
+#         changed_from_ip=get_client_ip(request),
+#         action="Solicitud eliminada (marcada como inactiva).",
+#     )
 
-    return 204, None
+#     return 204, None
 
 
 @router.post("/{request_id}/approve", response={200: UserRequestSchema, 400: MessageOut})
