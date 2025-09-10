@@ -29,6 +29,9 @@ class UserRequest(models.Model):
     contact_phone = models.CharField(max_length=20, verbose_name="Teléfono del Contacto")
     contact_email = models.EmailField(verbose_name="Correo Electrónico del Contacto")
 
+    # Código de cliente
+    customer_code = models.CharField(max_length=100, blank=True, null=True, verbose_name="Código de Cliente")
+
     # Campos de control
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendiente', verbose_name="Estado")
     

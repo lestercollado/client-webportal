@@ -243,6 +243,23 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
             AuthorizedPerson.objects.create(user_request=user_request, **person.dict())
         changes.append("Personas autorizadas actualizadas.")
 
+    # Check if customer_code is being updated to a non-empty value
+    if "customer_code" in payload.dict(exclude_unset=True) and payload.customer_code:
+        if user_request.status != "Completado":
+            user_request.status = "Completado"
+            changes.append(f"Estado cambiado a '{user_request.status}'.")
+
+    # Check if status is being updated to "Rechazado" and add a note
+    if "status" in payload.dict(exclude_unset=True) and payload.status == "Rechazado":
+        if "notes" in payload.dict(exclude_unset=True) and payload.notes:
+            RequestHistory.objects.create(
+                user_request=user_request,
+                changed_by=request.user if request.user.is_authenticated else None,
+                changed_from_ip=get_client_ip(request),
+                action=f"Solicitud Rechazada. Motivo: {payload.notes}",
+            )
+            changes.append(f"Solicitud Rechazada. Motivo: {payload.notes}")
+
     if changes:
         user_request.save()
         action_log = " ".join(changes)

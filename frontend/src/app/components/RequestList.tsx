@@ -6,6 +6,7 @@ import { getRequests, UserRequest, deleteRequest, updateRequestDetails } from '@
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
+import ApproveConfirmationModal from './ApproveConfirmationModal';
 
 interface RequestListProps {
   limit?: number;
@@ -59,6 +60,14 @@ const RequestList = ({
     title: '',
     message: '',
     onConfirm: () => {},
+  });
+
+  const [approveModalState, setApproveModalState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    initialCustomerCode: '',
+    onConfirm: (customerCode: string) => {},
   });
 
   const fetchRequests = async () => {
@@ -124,23 +133,30 @@ const RequestList = ({
   };
 
   const handleApprove = async (id: number) => {
-    setConfirmationState({
+    const requestToApprove = requests.find(req => req.id === id);
+    if (!requestToApprove) return;
+
+    setApproveModalState({
       isOpen: true,
-      title: 'Confirmar Completado',
-      message: '¿Estás seguro de que quieres Completar esta solicitud?',
-      onConfirm: async () => {
+      title: 'Confirmar Aprobación',
+      message: `Vas a aprobar la solicitud. Por favor, confirma o modifica el código de cliente.`,
+      initialCustomerCode: requestToApprove.customer_code,
+      onConfirm: async (customerCode: string) => {
         if (!auth?.token) return toast.error('No estás autenticado.');
         try {
-          const updatedRequest = await updateRequestDetails(id, { status: 'Completado' });
+          const updatedRequest = await updateRequestDetails(id, { 
+            status: 'Completado',
+            customer_code: customerCode
+          });
           updateRequestInList(updatedRequest);
-          toast.success('Solicitud completada con éxito.');
+          toast.success('Solicitud aprobada con éxito.');
           if (onDataChange) onDataChange();
         } catch (error: any) {
-          toast.error(error.message || 'Error al completar la solicitud.');
+          toast.error(error.message || 'Error al aprobar la solicitud.');
         }
-        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+        setApproveModalState({ isOpen: false, title: '', message: '', initialCustomerCode: '', onConfirm: () => {} });
       },
-    });    
+    });
   };
 
   const handleReject = (id: number) => {
@@ -236,6 +252,14 @@ const RequestList = ({
         onConfirm={confirmationState.onConfirm}
         title={confirmationState.title}
         message={confirmationState.message}
+      />
+      <ApproveConfirmationModal
+        isOpen={approveModalState.isOpen}
+        onClose={() => setApproveModalState({ isOpen: false, title: '', message: '', initialCustomerCode: '', onConfirm: () => {} })}
+        onConfirm={approveModalState.onConfirm}
+        title={approveModalState.title}
+        message={approveModalState.message}
+        initialCustomerCode={approveModalState.initialCustomerCode}
       />
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>

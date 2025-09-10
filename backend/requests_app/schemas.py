@@ -59,12 +59,12 @@ class UserRequestListSchema(Schema):
     contact_position: str
     contact_phone: str
     contact_email: str
-
     status: str
     created_at: datetime
     created_by_username: Optional[str] = None
     created_from_ip: Optional[str] = None   
     uploaded_files: List[str] = []
+    customer_code: Optional[str] = None
 
     @staticmethod
     def resolve_created_by_username(obj):
@@ -120,9 +120,11 @@ class UserRequestUpdateSchema(Schema):
     created_from_ip: Optional[str] = None   
 
     customer_role: Optional[str] = None
+    customer_code: Optional[str] = None
     status: Optional[str] = None
     uploaded_files: Optional[List[str]] = None
     authorized_persons: Optional[List[AuthorizedPersonCreateSchema]] = None
+    notes: Optional[str] = None
 
 
 # -----------------------------

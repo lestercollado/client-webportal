@@ -36,7 +36,7 @@ export interface UserRequest {
   authorized_persons: AuthorizedPerson[];
   created_by_username?: string;
   created_from_ip: string;
-  
+  customer_code: string;
   // Fields from backend schema
   company_name: string;
   address: string;
@@ -171,17 +171,10 @@ export const getRequestById = async (id: number): Promise<UserRequest> => {
   return response.json();
 };
 
-export const updateRequestDetails = async (id: number, data: { status?: 'Completado' | 'Rechazado'; notes?: string }): Promise<UserRequest> => {
-  const formData = new FormData();
-  if (data.status) {
-      formData.append('status', data.status);
-  }
-  if (data.notes) {
-      formData.append('notes', data.notes);
-  }
+export const updateRequestDetails = async (id: number, data: { status?: 'Completado' | 'Rechazado'; notes?: string; customer_code?: string }): Promise<UserRequest> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`, {
       method: 'PUT',
-      body: formData,
+      body: JSON.stringify(data),
   });
 
   if (!response.ok) {
