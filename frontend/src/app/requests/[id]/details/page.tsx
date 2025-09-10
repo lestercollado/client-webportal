@@ -10,6 +10,7 @@ import Header from '@/app/components/Header';
 import { toast } from 'sonner';
 import ApproveConfirmationModal from '@/app/components/ApproveConfirmationModal';
 import ConfirmationModal from '@/app/components/ConfirmationModal';
+import RejectConfirmationModal from '@/app/components/RejectConfirmationModal';
 
 export default function RequestDetailsPage() {
   const { auth, loading: authLoading } = useAuth();
@@ -173,15 +174,12 @@ export default function RequestDetailsPage() {
         initialCustomerCode={request?.customer_code || ''}
       />
 
-      <ConfirmationModal
+      <RejectConfirmationModal
         isOpen={isRejectModalOpen}
         onClose={() => setIsRejectModalOpen(false)}
         onConfirm={handleReject}
-        title="Rechazar Solicitud"
-        description="¿Estás seguro de que quieres rechazar esta solicitud? Por favor, proporciona un motivo."
-        confirmText="Rechazar"
-        cancelText="Cancelar"
-        requiresReason
+        title="Confirmar Rechazo"
+        message="Por favor, especifique el motivo del rechazo para esta solicitud."
       />
 
       <ConfirmationModal

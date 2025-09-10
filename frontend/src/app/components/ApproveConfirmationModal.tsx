@@ -28,7 +28,9 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    onConfirm(customerCode);
+    if (customerCode && customerCode.trim()) {
+      onConfirm(customerCode);
+    }
   };
 
   return (
@@ -45,7 +47,7 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
             type="text"
             name="customer_code"
             id="customer_code"
-            value={customerCode}
+            value={customerCode || ''}
             onChange={(e) => setCustomerCode(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
@@ -60,7 +62,8 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            disabled={!customerCode || !customerCode.trim()}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed"
           >
             Confirmar y Aprobar
           </button>

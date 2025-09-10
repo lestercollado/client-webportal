@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import ConfirmationModal from './ConfirmationModal';
 import ApproveConfirmationModal from './ApproveConfirmationModal';
+import RejectConfirmationModal from './RejectConfirmationModal';
 
 interface RequestListProps {
   limit?: number;
@@ -68,6 +69,13 @@ const RequestList = ({
     message: '',
     initialCustomerCode: '',
     onConfirm: (customerCode: string) => {},
+  });
+
+  const [rejectModalState, setRejectModalState] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: (notes: string) => {},
   });
 
   const fetchRequests = async () => {
@@ -160,21 +168,24 @@ const RequestList = ({
   };
 
   const handleReject = (id: number) => {
-    setConfirmationState({
+    setRejectModalState({
       isOpen: true,
       title: 'Confirmar Rechazo',
-      message: '¿Estás seguro de que quieres rechazar esta solicitud?',
-      onConfirm: async () => {
-        if (!auth?.token) return toast.error('No estás autenticado.');
+      message: 'Por favor, especifique el motivo del rechazo para esta solicitud.',
+      onConfirm: async (notes: string) => {
+        if (!auth?.token) {
+          toast.error('No estás autenticado.');
+          return;
+        }
         try {
-          const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado' });
+          const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado', notes });
           updateRequestInList(updatedRequest);
           toast.success('Solicitud rechazada con éxito.');
           if (onDataChange) onDataChange();
         } catch (error: any) {
           toast.error(error.message || 'Error al rechazar la solicitud.');
         }
-        setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+        setRejectModalState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
       },
     });
   };
@@ -260,6 +271,13 @@ const RequestList = ({
         title={approveModalState.title}
         message={approveModalState.message}
         initialCustomerCode={approveModalState.initialCustomerCode}
+      />
+      <RejectConfirmationModal
+        isOpen={rejectModalState.isOpen}
+        onClose={() => setRejectModalState({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+        onConfirm={rejectModalState.onConfirm}
+        title={rejectModalState.title}
+        message={rejectModalState.message}
       />
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">{title}</h2>
