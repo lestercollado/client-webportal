@@ -149,7 +149,6 @@ def list_requests(
                 "contact_phone": record.get("contact_phone", ""),
                 "contact_email": record.get("contact_email", ""),
                 "created_from_ip": record.get("ip_address", ""),
-                "status": "Pendiente",  # WP no manda status → default
                 "uploaded_files": uploaded_files,
                 "active": True,
                 "created_at": parse_datetime(record.get("created_at")),
@@ -227,6 +226,10 @@ def create_request(request, payload: UserRequestCreateSchema):
 def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
     """Updates an existing user request and its authorized persons."""
     user_request = get_object_or_404(UserRequest, id=request_id)
+    
+    if user_request.status == "Completado":
+        return 400, {"message": "Cannot update a completed request."}
+        
     changes = []
 
     # Update simple fields
@@ -249,16 +252,6 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
             user_request.status = "Completado"
             changes.append(f"Estado cambiado a '{user_request.status}'.")
 
-    # Check if status is being updated to "Rechazado" and add a note
-    if "status" in payload.dict(exclude_unset=True) and payload.status == "Rechazado":
-        if "notes" in payload.dict(exclude_unset=True) and payload.notes:
-            RequestHistory.objects.create(
-                user_request=user_request,
-                changed_by=request.user if request.user.is_authenticated else None,
-                changed_from_ip=get_client_ip(request),
-                action=f"Solicitud Rechazada. Motivo: {payload.notes}",
-            )
-            changes.append(f"Solicitud Rechazada. Motivo: {payload.notes}")
 
     if changes:
         user_request.save()
@@ -277,6 +270,10 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
 def delete_request(request, request_id: int):
     """Soft deletes a user request by setting its active flag to False."""
     user_request = get_object_or_404(UserRequest, id=request_id)
+    
+    if user_request.status == "Completado":
+        return 400, {"message": "Cannot delete a completed request."}
+        
     user_request.active = False
     user_request.save()
 
@@ -288,3 +285,46 @@ def delete_request(request, request_id: int):
     )
 
     return 204, None
+
+
+@router.post("/{request_id}/approve", response=UserRequestSchema)
+def approve_request(request, request_id: int):
+    """Approves a user request by setting its status to 'Completado'."""
+    user_request = get_object_or_404(UserRequest, id=request_id)
+
+    if user_request.status == "Completado":
+        return 400, {"message": "Request is already completed."}
+
+    user_request.status = "Completado"
+    user_request.save()
+
+    RequestHistory.objects.create(
+        user_request=user_request,
+        changed_by=request.user if request.user.is_authenticated else None,
+        changed_from_ip=get_client_ip(request),
+        action="Solicitud aprobada y marcada como completada.",
+    )
+
+    return user_request
+
+
+@router.post("/{request_id}/reject", response=UserRequestSchema)
+def reject_request(request, request_id: int):
+    """Rejects a user request by setting its status to 'Rechazado'."""
+    user_request = get_object_or_404(UserRequest, id=request_id)
+
+    if user_request.status in ["Rechazado", "Completado"]:
+        return 400, {"message": f"Cannot reject a request with status '{user_request.status}'."}
+
+    user_request.status = "Rechazado"
+    user_request.save()
+
+    RequestHistory.objects.create(
+        user_request=user_request,
+        changed_by=request.user if request.user.is_authenticated else None,
+        changed_from_ip=get_client_ip(request),
+        action="Solicitud rechazada.",
+    )
+
+    return user_request
+

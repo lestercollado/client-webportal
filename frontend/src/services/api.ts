@@ -171,7 +171,7 @@ export const getRequestById = async (id: number): Promise<UserRequest> => {
   return response.json();
 };
 
-export const updateRequestDetails = async (id: number, data: { status?: 'Completado' | 'Rechazado'; notes?: string; customer_code?: string }): Promise<UserRequest> => {
+export const updateRequestDetails = async (id: number, data: { notes?: string; customer_code?: string }): Promise<UserRequest> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -179,6 +179,30 @@ export const updateRequestDetails = async (id: number, data: { status?: 'Complet
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({ detail: 'Error al actualizar la solicitud' }));
+    throw new Error(errorBody.detail || 'Error desconocido');
+  }
+  return response.json();
+};
+
+export const approveRequest = async (id: number): Promise<UserRequest> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}/approve`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({ detail: 'Error al aprobar la solicitud' }));
+    throw new Error(errorBody.detail || 'Error desconocido');
+  }
+  return response.json();
+};
+
+export const rejectRequest = async (id: number): Promise<UserRequest> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}/reject`, {
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({ detail: 'Error al rechazar la solicitud' }));
     throw new Error(errorBody.detail || 'Error desconocido');
   }
   return response.json();

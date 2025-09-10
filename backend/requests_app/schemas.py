@@ -65,6 +65,7 @@ class UserRequestListSchema(Schema):
     created_from_ip: Optional[str] = None   
     uploaded_files: List[str] = []
     customer_code: Optional[str] = None
+    notes: Optional[str] = None
 
     @staticmethod
     def resolve_created_by_username(obj):

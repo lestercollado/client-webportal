@@ -31,9 +31,10 @@ class UserRequest(models.Model):
 
     # Código de cliente
     customer_code = models.CharField(max_length=100, blank=True, null=True, verbose_name="Código de Cliente")
+    notes = models.TextField(blank=True, null=True, verbose_name="Notas")
 
     # Campos de control
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pendiente', verbose_name="Estado")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True, null=True, verbose_name="Estado")
     
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_requests', verbose_name="Creado por")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
