@@ -3,9 +3,10 @@ django-ninja
 django-ninja-jwt
 psycopg2-binary
 django-cors-headers
-django-auth-ldap
+# django-auth-ldap
 python-dotenv
 gunicorn
 celery
 redis
 requests
+oracledb

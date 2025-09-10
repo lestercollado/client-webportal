@@ -65,7 +65,6 @@ class UserRequestListSchema(Schema):
     created_from_ip: Optional[str] = None   
     uploaded_files: List[str] = []
     customer_code: Optional[str] = None
-    customer_role: Optional[List[str]] = None
     notes: Optional[str] = None
 
 

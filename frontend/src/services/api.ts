@@ -182,7 +182,7 @@ export const getRequestById = async (id: number): Promise<UserRequest> => {
   return response.json();
 };
 
-export const updateRequestDetails = async (id: number, data: { notes?: string; customer_code?: string }): Promise<UserRequest> => {
+export const updateRequestDetails = async (id: number, data: { notes?: string; customer_code?: string; customer_role?: string[]; status?: string }): Promise<UserRequest> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),

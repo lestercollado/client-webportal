@@ -413,46 +413,46 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
 #     return 204, None
 
 
-@router.post("/{request_id}/approve", response={200: UserRequestSchema, 400: MessageOut})
-def approve_request(request, request_id: int, payload: ApproveRequestSchema):
-    """Approves a user request by setting its status to 'Completado'."""
-    user_request = get_object_or_404(UserRequest, id=request_id)
+# @router.post("/{request_id}/approve", response={200: UserRequestSchema, 400: MessageOut})
+# def approve_request(request, request_id: int, payload: ApproveRequestSchema):
+#     """Approves a user request by setting its status to 'Completado'."""
+#     user_request = get_object_or_404(UserRequest, id=request_id)
 
-    if user_request.status == "Completado":
-        return 400, {"message": "Request is already completed."}
+#     if user_request.status == "Completado":
+#         return 400, {"message": "Request is already completed."}
 
-    user_request.status = "Completado"
-    user_request.customer_role = payload.customer_role if payload.customer_role is not None else []
-    user_request.customer_code = payload.customer_code
-    user_request.save()
+#     user_request.status = "Completado"
+#     user_request.customer_role = payload.customer_role if payload.customer_role is not None else []
+#     user_request.customer_code = payload.customer_code
+#     user_request.save()
 
-    RequestHistory.objects.create(
-        user_request=user_request,
-        changed_by=request.user if request.user.is_authenticated else None,
-        changed_from_ip=get_client_ip(request),
-        action=f"Solicitud aprobada y marcada como completada. Roles asignados: {user_request.customer_role}",
-    )
+#     RequestHistory.objects.create(
+#         user_request=user_request,
+#         changed_by=request.user if request.user.is_authenticated else None,
+#         changed_from_ip=get_client_ip(request),
+#         action=f"Solicitud aprobada y marcada como completada. Roles asignados: {user_request.customer_role}",
+#     )
 
-    return user_request
+#     return user_request
 
 
-@router.post("/{request_id}/reject", response={200: UserRequestSchema, 400: MessageOut})
-def reject_request(request, request_id: int):
-    """Rejects a user request by setting its status to 'Rechazado'."""
-    user_request = get_object_or_404(UserRequest, id=request_id)
+# @router.post("/{request_id}/reject", response={200: UserRequestSchema, 400: MessageOut})
+# def reject_request(request, request_id: int):
+#     """Rejects a user request by setting its status to 'Rechazado'."""
+#     user_request = get_object_or_404(UserRequest, id=request_id)
 
-    if user_request.status in ["Rechazado", "Completado"]:
-        return 400, {"message": f"Cannot reject a request with status '{user_request.status}'."}
+#     if user_request.status in ["Rechazado", "Completado"]:
+#         return 400, {"message": f"Cannot reject a request with status '{user_request.status}'."}
 
-    user_request.status = "Rechazado"
-    user_request.save()
+#     user_request.status = "Rechazado"
+#     user_request.save()
 
-    RequestHistory.objects.create(
-        user_request=user_request,
-        changed_by=request.user if request.user.is_authenticated else None,
-        changed_from_ip=get_client_ip(request),
-        action="Solicitud rechazada.",
-    )
+#     RequestHistory.objects.create(
+#         user_request=user_request,
+#         changed_by=request.user if request.user.is_authenticated else None,
+#         changed_from_ip=get_client_ip(request),
+#         action="Solicitud rechazada.",
+#     )
 
-    return user_request
+#     return user_request
 

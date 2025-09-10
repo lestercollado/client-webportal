@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-import ldap
-from django_auth_ldap.config import LDAPSearch, ActiveDirectoryGroupType, LDAPGroupQuery
+# import ldap
+# from django_auth_ldap.config import LDAPSearch, ActiveDirectoryGroupType, LDAPGroupQuery
 from datetime import timedelta
 from dotenv import load_dotenv
 load_dotenv()
@@ -89,7 +89,7 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRES_DB', 'clientes'),
         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', 5432),
     }
 }
@@ -136,6 +136,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Oracle Database Configuration (for direct connection)
+ORACLE_DB_USER = os.environ.get('ORACLE_DB_USER','cm_mis')
+ORACLE_DB_PASSWORD = os.environ.get('ORACLE_DB_PASSWORD','OK')
+ORACLE_DB_HOST = os.environ.get('ORACLE_DB_HOST','10.0.1.61')
+ORACLE_DB_PORT = os.environ.get('ORACLE_DB_PORT',1521)
+ORACLE_DB_SERVICE_NAME = os.environ.get('ORACLE_DB_SERVICE_NAME','tcmariel')
+
 # Ninja JWT Configuration
 NINJA_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
@@ -146,61 +153,61 @@ NINJA_JWT = {
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
 
-AUTH_LDAP_SERVER_URI = "ldap://ldap.tcmariel.cu:389"
-AUTH_LDAP_BIND_DN = os.environ.get('LDAP_DN', '')
-AUTH_LDAP_BIND_PASSWORD = os.environ.get('LDAP_PASS', '')
+# AUTH_LDAP_SERVER_URI = "ldap://ldap.tcmariel.cu:389"
+# AUTH_LDAP_BIND_DN = os.environ.get('LDAP_DN', '')
+# AUTH_LDAP_BIND_PASSWORD = os.environ.get('LDAP_PASS', '')
 
-AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    "DC=tcmariel,DC=cu",
-    ldap.SCOPE_SUBTREE,
-    "(sAMAccountName=%(user)s)"
-)
+# AUTH_LDAP_USER_SEARCH = LDAPSearch(
+#     "DC=tcmariel,DC=cu",
+#     ldap.SCOPE_SUBTREE,
+#     "(sAMAccountName=%(user)s)"
+# )
 
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-    "DC=tcmariel,DC=cu",
-    ldap.SCOPE_SUBTREE,
-    "(objectClass=group)"
-)
+# AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+#     "DC=tcmariel,DC=cu",
+#     ldap.SCOPE_SUBTREE,
+#     "(objectClass=group)"
+# )
 
-AUTH_LDAP_GROUP_TYPE = ActiveDirectoryGroupType()
+# AUTH_LDAP_GROUP_TYPE = ActiveDirectoryGroupType()
 
-AUTH_LDAP_REQUIRE_GROUP = (
-    LDAPGroupQuery("CN=ICT,CN=Users,DC=tcmariel,DC=cu") |
-    LDAPGroupQuery("CN=DC,CN=Users,DC=tcmariel,DC=cu")
-)
+# AUTH_LDAP_REQUIRE_GROUP = (
+#     LDAPGroupQuery("CN=ICT,CN=Users,DC=tcmariel,DC=cu") |
+#     LDAPGroupQuery("CN=DC,CN=Users,DC=tcmariel,DC=cu")
+# )
 
-AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-    "is_active": [
-        "CN=ICT,CN=Users,DC=tcmariel,DC=cu",
-        "CN=DC,CN=Users,DC=tcmariel,DC=cu",
-    ],
-    "is_staff": [
-        "CN=ICT,CN=Users,DC=tcmariel,DC=cu",
-    ],
-}
+# AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+#     "is_active": [
+#         "CN=ICT,CN=Users,DC=tcmariel,DC=cu",
+#         "CN=DC,CN=Users,DC=tcmariel,DC=cu",
+#     ],
+#     "is_staff": [
+#         "CN=ICT,CN=Users,DC=tcmariel,DC=cu",
+#     ],
+# }
 
-AUTH_LDAP_USER_ATTR_MAP = {
-    "first_name": "givenName",
-    "last_name": "sn",
-    "email": "userPrincipalName"
-}
+# AUTH_LDAP_USER_ATTR_MAP = {
+#     "first_name": "givenName",
+#     "last_name": "sn",
+#     "email": "userPrincipalName"
+# }
 
-AUTHENTICATION_BACKENDS = [
-    'django_auth_ldap.backend.LDAPBackend',
-    'django.contrib.auth.backends.ModelBackend',
-]
+# AUTHENTICATION_BACKENDS = [
+#     'django_auth_ldap.backend.LDAPBackend',
+#     'django.contrib.auth.backends.ModelBackend',
+# ]
 
-AUTH_LDAP_ALWAYS_UPDATE_USER = True
-AUTH_LDAP_FIND_GROUP_PERMS = True
-AUTH_LDAP_CACHE_TIMEOUT = 3600
+# AUTH_LDAP_ALWAYS_UPDATE_USER = True
+# AUTH_LDAP_FIND_GROUP_PERMS = True
+# AUTH_LDAP_CACHE_TIMEOUT = 3600
 
-AUTH_LDAP_CONNECTION_OPTIONS = {
-    ldap.OPT_PROTOCOL_VERSION: 3,
-    ldap.OPT_REFERRALS: 0,
-    ldap.OPT_NETWORK_TIMEOUT: 30,
-    ldap.OPT_TIMEOUT: 30,
-    ldap.OPT_X_TLS_REQUIRE_CERT: ldap.OPT_X_TLS_NEVER,
-}
+# AUTH_LDAP_CONNECTION_OPTIONS = {
+#     ldap.OPT_PROTOCOL_VERSION: 3,
+#     ldap.OPT_REFERRALS: 0,
+#     ldap.OPT_NETWORK_TIMEOUT: 30,
+#     ldap.OPT_TIMEOUT: 30,
+#     ldap.OPT_X_TLS_REQUIRE_CERT: ldap.OPT_X_TLS_NEVER,
+# }
 
 LOGGING = {
     'version': 1,
@@ -246,8 +253,8 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Celery Configuration
-CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
