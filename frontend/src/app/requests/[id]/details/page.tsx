@@ -47,8 +47,8 @@ export default function RequestDetailsPage() {
     fetchRequest();
   }, [auth?.token, id]);
 
-  const handleApprove = (customerCode: string) => {
-    updateRequestDetails(id, { customer_code: customerCode, status: 'Completado' })
+  const handleApprove = (customerCode: string, customerRole: string[]) => {
+    updateRequestDetails(id, { customer_code: customerCode, customer_role: customerRole, status: 'Completado' })
       .then(() => {
         toast.success('Solicitud aprobada con éxito!');
         fetchRequest();
@@ -132,7 +132,7 @@ export default function RequestDetailsPage() {
                                 </button>
                             )}
 
-                            <Link 
+                            {/* <Link 
                                 href={`/requests/${id}/edit`} 
                                 title="Editar" 
                                 className="text-blue-600 hover:text-blue-900"
@@ -141,7 +141,7 @@ export default function RequestDetailsPage() {
                                     <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                                     <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
                                 </svg>
-                            </Link>
+                            </Link> */}
                             
                             {/* <button 
                                 onClick={() => setIsDeleteModalOpen(true)} 
@@ -170,8 +170,9 @@ export default function RequestDetailsPage() {
         onClose={() => setIsApproveModalOpen(false)}
         onConfirm={handleApprove}
         title="Confirmar Aprobación"
-        message="Vas a aprobar la solicitud. Por favor, escriba el código de cliente, creado previamente en el CiTOS."
+        message="Vas a aprobar la solicitud. Por favor, escriba el código de cliente y el rol del cliente, creado previamente en el CiTOS."
         initialCustomerCode={request?.customer_code || ''}
+        initialCustomerRole={request?.customer_role || []}
       />
 
       <RejectConfirmationModal

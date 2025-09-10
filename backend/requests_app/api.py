@@ -10,6 +10,7 @@ from .schemas import (
     UserRequestListSchema,
     AuthorizedPersonCreateSchema,
     MessageOut,
+    ApproveRequestSchema,
 )
 from django.db.models import Count, Q
 from django.db import IntegrityError
@@ -181,9 +182,17 @@ def list_requests(
     if email:
         qs = qs.filter(email__icontains=email)
     if customer_role:
-        qs = qs.filter(customer_role__icontains=customer_role)
+        # Para buscar en un JSONField que contiene una lista de strings
+        # customer_role aquí es el valor del filtro, que debería ser un solo rol
+        qs = qs.filter(customer_role__contains=[customer_role])
 
-    return qs.order_by("-created_at")
+    # Asegurarse de que customer_role sea una lista para cada objeto antes de devolverlo
+    # Convertir el queryset a una lista para poder modificar los objetos
+    result_list = list(qs.order_by("-created_at"))
+    for req in result_list:
+        if req.customer_role is None:
+            req.customer_role = []
+    return result_list
 
 
 
@@ -194,6 +203,9 @@ def get_request(request, request_id: int):
         UserRequest.objects.prefetch_related("authorized_persons", "history"),
         id=request_id,
     )
+    # Asegurarse de que customer_role sea una lista, incluso si es None en la DB
+    if user_request.customer_role is None:
+        user_request.customer_role = []
     return user_request
 
 
@@ -296,7 +308,7 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
 
 
 @router.post("/{request_id}/approve", response={200: UserRequestSchema, 400: MessageOut})
-def approve_request(request, request_id: int):
+def approve_request(request, request_id: int, payload: ApproveRequestSchema):
     """Approves a user request by setting its status to 'Completado'."""
     user_request = get_object_or_404(UserRequest, id=request_id)
 
@@ -304,6 +316,8 @@ def approve_request(request, request_id: int):
         return 400, {"message": "Request is already completed."}
 
     user_request.status = "Completado"
+    user_request.customer_role = payload.customer_role
+    user_request.customer_code = payload.customer_code
     user_request.save()
 
     RequestHistory.objects.create(

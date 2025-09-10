@@ -30,9 +30,22 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <DetailItem label="Nombre de la Empresa" value={request.company_name} />
             <DetailItem label="NIT" value={request.tax_id} />
+            {request.customer_code && <DetailItem label="Código de Cliente" value={request.customer_code} />}
             <DetailItem label="Teléfono" value={request.phone} />
             <DetailItem label="Email" value={request.email} />
             <DetailItem label="Dirección" value={`${request.address}, ${request.city}, ${request.state}`} />
+            {request.customer_role && request.customer_role.length > 0 && (
+                <div className="md:col-span-3">
+                    <p className="text-sm font-medium text-gray-500">Roles de la Empresa</p>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                        {request.customer_role.map((role, index) => (
+                            <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {role}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
       </div>
 

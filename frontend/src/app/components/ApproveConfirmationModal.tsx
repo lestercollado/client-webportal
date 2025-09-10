@@ -1,35 +1,57 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import MultiSelectDropdown from './MultiSelectDropdown'; // Importar el nuevo componente
 
 interface ApproveConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (customerCode: string) => void;
+  onConfirm: (customerCode: string, customerRole: string[]) => void;
   title: string;
   message: string;
   initialCustomerCode: string;
+  initialCustomerRole: string[];
 }
 
-const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title, 
+const customerRolesOptions = [
+  "COMERCIAL",
+  "NAV-INFO",
+  "NAV-INFO-OPER",
+  "TRANSPORTISTAS",
+  "NAVIERAS",
+  "IMPORT-INFO-OPER",
+  "ZONA DE ACTIVIDADES LOG",
+  "ASAT",
+  "NO-TRANSFERENCIA",
+  "IMPORT-INFO",
+  "TRANSITARIA",
+  "CF-INFO-OPER",
+  "TRANS-IMPORT",
+  "IMPORT-OPER",
+];
+
+const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
   message,
-  initialCustomerCode
+  initialCustomerCode,
+  initialCustomerRole,
 }) => {
   const [customerCode, setCustomerCode] = useState(initialCustomerCode);
+  const [customerRole, setCustomerRole] = useState<string[]>(initialCustomerRole);
 
   useEffect(() => {
     setCustomerCode(initialCustomerCode);
-  }, [initialCustomerCode]);
+    setCustomerRole(initialCustomerRole);
+  }, [initialCustomerCode, initialCustomerRole]);
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    if (customerCode && customerCode.trim()) {
-      onConfirm(customerCode);
+    if (customerCode && customerCode.trim() && customerRole && customerRole.length > 0) {
+      onConfirm(customerCode, customerRole);
     }
   };
 
@@ -53,6 +75,18 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
           />
         </div>
 
+        <div className="mt-4">
+          <label htmlFor="customer_role" className="block text-sm font-medium text-gray-700">
+            Rol del Cliente
+          </label>
+          <MultiSelectDropdown
+            options={customerRolesOptions}
+            selectedOptions={customerRole}
+            onChange={setCustomerRole}
+            label="roles"
+          />
+        </div>
+
         <div className="mt-6 flex justify-end space-x-3">
           <button
             onClick={onClose}
@@ -62,7 +96,7 @@ const ApproveConfirmationModal: React.FC<ApproveConfirmationModalProps> = ({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!customerCode || !customerCode.trim()}
+            disabled={!customerCode || !customerCode.trim() || customerRole.length === 0}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300 disabled:cursor-not-allowed"
           >
             Confirmar y Aprobar

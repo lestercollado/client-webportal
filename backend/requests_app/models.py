@@ -31,6 +31,7 @@ class UserRequest(models.Model):
 
     # Código de cliente
     customer_code = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name="Código de Cliente")
+    customer_role = models.JSONField(default=list, blank=True, null=True, verbose_name="Rol del Cliente")
     notes = models.TextField(blank=True, null=True, verbose_name="Notas")
 
     # Campos de control

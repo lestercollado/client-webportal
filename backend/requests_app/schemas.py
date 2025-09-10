@@ -65,7 +65,9 @@ class UserRequestListSchema(Schema):
     created_from_ip: Optional[str] = None   
     uploaded_files: List[str] = []
     customer_code: Optional[str] = None
+    customer_role: List[str] = []
     notes: Optional[str] = None
+
 
     @staticmethod
     def resolve_created_by_username(obj):
@@ -120,7 +122,7 @@ class UserRequestUpdateSchema(Schema):
     contact_email: Optional[str] = None
     created_from_ip: Optional[str] = None   
 
-    customer_role: Optional[str] = None
+    customer_role: Optional[List[str]] = None
     customer_code: Optional[str] = None
     status: Optional[str] = None
     uploaded_files: Optional[List[str]] = None
@@ -140,3 +142,8 @@ class StatsOut(Schema):
 
 class MessageOut(Schema):
     message: str
+
+
+class ApproveRequestSchema(Schema):
+    customer_role: List[str]
+    customer_code: str
