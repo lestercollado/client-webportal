@@ -136,3 +136,7 @@ class StatsOut(Schema):
     pending: int
     completed: int
     rejected: int
+
+
+class MessageOut(Schema):
+    message: str

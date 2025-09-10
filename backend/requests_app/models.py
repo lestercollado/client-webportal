@@ -30,7 +30,7 @@ class UserRequest(models.Model):
     contact_email = models.EmailField(verbose_name="Correo Electrónico del Contacto")
 
     # Código de cliente
-    customer_code = models.CharField(max_length=100, blank=True, null=True, verbose_name="Código de Cliente")
+    customer_code = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name="Código de Cliente")
     notes = models.TextField(blank=True, null=True, verbose_name="Notas")
 
     # Campos de control

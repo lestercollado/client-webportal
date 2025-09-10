@@ -55,7 +55,7 @@ export default function RequestDetailsPage() {
         setIsApproveModalOpen(false);
       })
       .catch(err => {
-        toast.error('No se pudo aprobar la solicitud.');
+        toast.error("Ya existe una solicitud con este código de cliente.");
         console.error(err);
       });
   };

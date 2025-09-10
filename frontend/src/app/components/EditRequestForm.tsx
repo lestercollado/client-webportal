@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { updateRequest, UserRequest } from "@/services/api";
+import { updateRequest, UserRequest, ApiError } from "@/services/api";
 import { useRouter } from "next/navigation";
 
 interface Attachment {
@@ -68,8 +68,12 @@ export default function EditRequestForm({ requestData }: EditRequestFormProps) {
       toast.success("Solicitud actualizada con éxito.");
       router.push("/");
       router.refresh(); // To see the changes
-    } catch (error: any) {
-      toast.error(error.message || "Error al actualizar la solicitud.");
+    } catch (err) { // Changed error: any to err
+      if (err instanceof ApiError) {
+        toast.error(err.message);
+      } else {
+        toast.error("Error al actualizar la solicitud.");
+      }
     }
   };
 

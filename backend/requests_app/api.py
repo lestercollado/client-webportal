@@ -9,8 +9,10 @@ from .schemas import (
     StatsOut,
     UserRequestListSchema,
     AuthorizedPersonCreateSchema,
+    MessageOut,
 )
 from django.db.models import Count, Q
+from django.db import IntegrityError
 from ninja_jwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -195,16 +197,19 @@ def get_request(request, request_id: int):
     return user_request
 
 
-@router.post("/", response=UserRequestSchema)
+@router.post("/", response={200: UserRequestSchema, 400: MessageOut})
 def create_request(request, payload: UserRequestCreateSchema):
     """Creates a new user request with authorized persons and uploaded files."""
-    user_request = UserRequest.objects.create(
-        **payload.dict(
-            exclude={"authorized_persons"}
-        ),  # todos los campos directos de UserRequest
-        created_by=request.user if request.user.is_authenticated else None,
-        created_from_ip=get_client_ip(request),
-    )
+    try:
+        user_request = UserRequest.objects.create(
+            **payload.dict(
+                exclude={"authorized_persons"}
+            ),
+            created_by=request.user if request.user.is_authenticated else None,
+            created_from_ip=get_client_ip(request),
+        )
+    except IntegrityError:
+        return 400, {"message": "Ya existe una solicitud con este código de cliente."}
 
     # Save authorized persons if provided
     persons_data = payload.authorized_persons or []
@@ -222,7 +227,7 @@ def create_request(request, payload: UserRequestCreateSchema):
     return user_request
 
 
-@router.put("/{request_id}", response=UserRequestSchema)
+@router.put("/{request_id}", response={200: UserRequestSchema, 400: MessageOut})
 def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
     """Updates an existing user request and its authorized persons."""
     user_request = get_object_or_404(UserRequest, id=request_id)
@@ -254,7 +259,10 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
 
 
     if changes:
-        user_request.save()
+        try:
+            user_request.save()
+        except IntegrityError:
+            return 400, {"message": "Ya existe una solicitud con este código de cliente."}
         action_log = " ".join(changes)
         RequestHistory.objects.create(
             user_request=user_request,
@@ -266,7 +274,7 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
     return user_request
 
 
-@router.delete("/{request_id}", response={204: None})
+@router.delete("/{request_id}", response={204: None, 400: MessageOut})
 def delete_request(request, request_id: int):
     """Soft deletes a user request by setting its active flag to False."""
     user_request = get_object_or_404(UserRequest, id=request_id)
@@ -287,7 +295,7 @@ def delete_request(request, request_id: int):
     return 204, None
 
 
-@router.post("/{request_id}/approve", response=UserRequestSchema)
+@router.post("/{request_id}/approve", response={200: UserRequestSchema, 400: MessageOut})
 def approve_request(request, request_id: int):
     """Approves a user request by setting its status to 'Completado'."""
     user_request = get_object_or_404(UserRequest, id=request_id)
@@ -308,7 +316,7 @@ def approve_request(request, request_id: int):
     return user_request
 
 
-@router.post("/{request_id}/reject", response=UserRequestSchema)
+@router.post("/{request_id}/reject", response={200: UserRequestSchema, 400: MessageOut})
 def reject_request(request, request_id: int):
     """Rejects a user request by setting its status to 'Rechazado'."""
     user_request = get_object_or_404(UserRequest, id=request_id)

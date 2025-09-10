@@ -66,6 +66,19 @@ export interface Stats {
   total: number;
 }
 
+// --- Custom Error Class ---
+export class ApiError extends Error {
+  statusCode: number;
+  data: any;
+
+  constructor(message: string, statusCode: number, data: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+    this.data = data;
+  }
+}
+
 // --- Wrapper de Fetch para Autenticación ---
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
@@ -95,7 +108,18 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     // Forzar recarga para que el AuthProvider redirija a /login
     window.location.reload(); 
     // Lanzar un error para detener la ejecución actual
-    throw new Error('Sesión expirada. Por favor, inicie sesión de nuevo.');
+    throw new ApiError('Sesión expirada. Por favor, inicie sesión de nuevo.', response.status, null);
+  }
+
+  if (!response.ok) {
+    let errorData: any = null;
+    try {
+      errorData = await response.json();
+    } catch (e) {
+      // If response is not JSON, use status text
+      errorData = { message: response.statusText || 'Error desconocido del servidor' };
+    }
+    throw new ApiError(errorData.message || 'Error desconocido', response.status, errorData);
   }
 
   return response;
@@ -134,10 +158,6 @@ export const getRequests = async (params?: URLSearchParams): Promise<PaginatedRe
   }
 
   const response = await fetchWithAuth(url.toString());
-
-  if (!response.ok) {
-    throw new Error('Error al obtener las solicitudes');
-  }
   
   const data = await response.json();
   
@@ -154,20 +174,11 @@ export const createRequest = async (data: FormData): Promise<UserRequest> => {
     method: 'POST',
     body: data,
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Error al crear la solicitud' }));
-    throw new Error(errorBody.detail || 'Error desconocido');
-  }
   return response.json();
 };
 
 export const getRequestById = async (id: number): Promise<UserRequest> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`);
-
-  if (!response.ok) {
-    throw new Error('Error al obtener la solicitud');
-  }
   return response.json();
 };
 
@@ -176,11 +187,6 @@ export const updateRequestDetails = async (id: number, data: { notes?: string; c
       method: 'PUT',
       body: JSON.stringify(data),
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Error al actualizar la solicitud' }));
-    throw new Error(errorBody.detail || 'Error desconocido');
-  }
   return response.json();
 };
 
@@ -188,11 +194,6 @@ export const approveRequest = async (id: number): Promise<UserRequest> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}/approve`, {
     method: 'POST',
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Error al aprobar la solicitud' }));
-    throw new Error(errorBody.detail || 'Error desconocido');
-  }
   return response.json();
 };
 
@@ -200,11 +201,6 @@ export const rejectRequest = async (id: number): Promise<UserRequest> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}/reject`, {
     method: 'POST',
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Error al rechazar la solicitud' }));
-    throw new Error(errorBody.detail || 'Error desconocido');
-  }
   return response.json();
 };
 
@@ -214,8 +210,8 @@ export const deleteRequest = async (id: number): Promise<void> => {
   });
 
   if (response.status !== 204) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Error al eliminar la solicitud' }));
-    throw new Error(errorBody.detail || 'Error desconocido');
+    // ApiError will be thrown by fetchWithAuth if response.ok is false
+    // For 204, we just return void if successful
   }
 };
 
@@ -224,20 +220,11 @@ export const updateRequest = async (id: number, data: FormData): Promise<UserReq
     method: 'PUT',
     body: data,
   });
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Error al actualizar la solicitud' }));
-    throw new Error(errorBody.detail || 'Error desconocido');
-  }
   return response.json();
 };
 
 export const getStats = async (): Promise<Stats> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/stats/`);
-
-  if (!response.ok) {
-    throw new Error('Error al obtener las estadísticas');
-  }
   return response.json();
 };
 
@@ -245,10 +232,5 @@ export async function getRequestDetails(id: number) {
   const res = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`, {
     cache: 'no-store',
   });
-
-  if (!res.ok) {
-    throw new Error('No se pudo obtener la solicitud');
-  }
-
   return res.json();
 }

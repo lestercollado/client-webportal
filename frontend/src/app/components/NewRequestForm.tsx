@@ -1,7 +1,7 @@
 'use client';
 import { useState, FormEvent, DragEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { createRequest } from '@/services/api';
+import { createRequest, ApiError } from '@/services/api';
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -11,8 +11,6 @@ const NewRequestForm = () => {
   const [contactEmail, setContactEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const { auth } = useAuth();
@@ -57,17 +55,15 @@ const NewRequestForm = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!customerCode || !contactEmail || attachments.length === 0) {
-      setError('Todos los campos son obligatorios, incluyendo al menos un archivo adjunto.');
+      toast.error('Todos los campos son obligatorios, incluyendo al menos un archivo adjunto.');
       return;
     }
     if (!auth?.token) {
-      setError('No estás autenticado.');
+      toast.error('No estás autenticado.');
       return;
     }
 
     setIsLoading(true);
-    setError('');
-    setMessage('');
 
     const formData = new FormData();
     formData.append('customer_code', customerCode);
@@ -83,8 +79,12 @@ const NewRequestForm = () => {
       toast.success("Solicitud creada con éxito.");
       router.push("/");
       router.refresh()
-    } catch (err: any) {
-      setError(err.message || 'Ocurrió un error al crear la solicitud.');
+    } catch (err) {
+      if (err instanceof ApiError) {
+        toast.error(err.message);
+      } else {
+        toast.error('Ocurrió un error al crear la solicitud.');
+      }
     } finally {
       setIsLoading(false);
     }
