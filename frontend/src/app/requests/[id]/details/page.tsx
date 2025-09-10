@@ -168,6 +168,9 @@ export default function RequestDetailsPage() {
         isOpen={isApproveModalOpen}
         onClose={() => setIsApproveModalOpen(false)}
         onConfirm={handleApprove}
+        title="Confirmar Aprobación"
+        message="Vas a aprobar la solicitud. Por favor, escriba el código de cliente, creado previamente en el CiTOS."
+        initialCustomerCode={request?.customer_code || ''}
       />
 
       <ConfirmationModal

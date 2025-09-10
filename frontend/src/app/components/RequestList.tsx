@@ -139,7 +139,7 @@ const RequestList = ({
     setApproveModalState({
       isOpen: true,
       title: 'Confirmar Aprobación',
-      message: `Vas a aprobar la solicitud. Por favor, confirma o modifica el código de cliente.`,
+      message: `Vas a aprobar la solicitud. Por favor, escriba el código de cliente, creado previamente en el CiTOS`,
       initialCustomerCode: requestToApprove.customer_code,
       onConfirm: async (customerCode: string) => {
         if (!auth?.token) return toast.error('No estás autenticado.');
