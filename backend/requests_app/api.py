@@ -41,19 +41,52 @@ def get_client_ip(request):
     return ip
 
 
-def generate_user_cod(contact_name: str) -> str:
-    parts = contact_name.split()
+import re
+import unicodedata
+
+def generate_user_cod(contact_name: str, cursor: oracledb.Cursor) -> str:
+    """
+    Generates a unique user code from a contact name, ensuring it is uppercase,
+    contains no special characters or accents, and does not already exist in the Oracle database.
+    """
+    # Normalize string: remove accents, convert to uppercase, and remove special characters
+    nfkd_form = unicodedata.normalize('NFKD', contact_name)
+    ascii_name = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+    
+    parts = ascii_name.split()
     if not parts:
-        return ""
+        return "" # Should not happen if contact_name is mandatory
 
     first_name = parts[0]
     last_name_initials = ""
     if len(parts) > 1:
         for part in parts[1:]:
-            if part: # Ensure part is not empty
+            if part:
                 last_name_initials += part[0]
-
-    return (first_name + last_name_initials).upper()
+    
+    base_code = re.sub(r'[^A-Z0-9]', '', (first_name + last_name_initials).upper())
+    
+    user_code = base_code
+    counter = 1
+    
+    # Check for uniqueness in Oracle DB
+    while True:
+        try:
+            cursor.execute("SELECT 1 FROM CM_WEB.WEB_USER WHERE USER_COD = :user_cod", {'user_cod': user_code})
+            if cursor.fetchone() is None:
+                # Code is unique
+                return user_code
+            else:
+                # Code exists, generate a new one
+                user_code = f"{base_code}{counter}"
+                counter += 1
+        except oracledb.Error as e:
+            # Handle potential DB errors during check
+            error_obj, = e.args
+            print(f"Oracle DB error while checking user_code uniqueness: {error_obj.message}")
+            # As a fallback, return a potentially non-unique code with a random suffix
+            # to avoid an infinite loop in case of persistent DB issues.
+            return f"{base_code}{uuid.uuid4().hex[:4].upper()}"
 
 
 # Routers
@@ -313,23 +346,26 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
         if user_request.customer_code: # Only proceed if customer_code is available
             insert_sql = """
             INSERT INTO CM_WEB.WEB_USER (
-                USER_COD, USER_NAM, COMPANY_COD, TELEPHONE, USER_PWD, EMAIL, ADDRESS, REC_TIM, REC_NAM
+                USER_COD, USER_NAM, COMPANY_COD, TELEPHONE, USER_PWD, EMAIL, ADDRESS, REPEAT_COUNT, REC_TIM, REC_NAM
             ) VALUES (
-                :user_cod, :user_nam, :company_cod, :telephone, :user_pwd, :email, :address, :rec_tim, :rec_nam
+                :user_cod, :user_nam, :company_cod, :telephone, :user_pwd, :email, :address, :repeat_count, :rec_tim, :rec_nam
             )
             """
             for person in user_request.authorized_persons.all():
-                generated_user_cod = generate_user_cod(person.name)
+                generated_user_cod = generate_user_cod(person.name, cursor)
+                password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+                password_hash = hashlib.md5(password.encode()).hexdigest()
                 try:
                     cursor.execute(insert_sql, {
                         'user_cod': generated_user_cod,
                         'user_nam': person.name,
                         'company_cod': user_request.customer_code,
                         'telephone': person.phone,
-                        'user_pwd': hashlib.md5(''.join(random.choices(string.ascii_letters + string.digits, k=10)).encode()).hexdigest(), # Generate a random password for each user and hash it with MD5
+                        'user_pwd': password_hash,
                         'email': person.email,
                         'address': user_request.address,
                         'rec_tim': user_request.created_at,
+                        'repeat_count': 10,
                         'rec_nam': 'SYSTEM WEB'
                     })
                     print(f"Successfully inserted authorized person {person.name} for request {user_request.id} into Oracle DB.")
