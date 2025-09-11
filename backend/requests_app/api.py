@@ -20,7 +20,7 @@ from ninja_jwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from ninja.schema import Schema
-from .tasks import send_2fa_email_task
+from .tasks import send_2fa_email_task, send_welcome_email_task
 import random
 import uuid
 import string
@@ -328,86 +328,101 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
             user_request.customer_role = new_customer_role
             changes.append(f"customer_role cambiado de '{user_request.customer_role}' a '{new_customer_role}'.")
 
-    connection = None
-    cursor = None
-    try:
-        oracle_user = settings.ORACLE_DB_USER
-        oracle_password = settings.ORACLE_DB_PASSWORD
-        oracle_host = settings.ORACLE_DB_HOST
-        oracle_port = settings.ORACLE_DB_PORT
-        oracle_service_name = settings.ORACLE_DB_SERVICE_NAME
+    if user_request.status == "Completado":
+        connection = None
+        cursor = None
+        try:
+            oracle_user = settings.ORACLE_DB_USER
+            oracle_password = settings.ORACLE_DB_PASSWORD
+            oracle_host = settings.ORACLE_DB_HOST
+            oracle_port = settings.ORACLE_DB_PORT
+            oracle_service_name = settings.ORACLE_DB_SERVICE_NAME
 
-        dsn = f"{oracle_host}:{oracle_port}/{oracle_service_name}"
-        oracledb.init_oracle_client()
-        connection = oracledb.connect(user=oracle_user, password=oracle_password, dsn=dsn)
-        cursor = connection.cursor()
-        
-        # Insert each authorized person into Oracle DB
-        if user_request.customer_code: # Only proceed if customer_code is available
-            insert_sql = """
-            INSERT INTO CM_WEB.WEB_USER (
-                USER_COD, USER_NAM, COMPANY_COD, TELEPHONE, USER_PWD, EMAIL, ADDRESS, REPEAT_COUNT, REC_TIM, REC_NAM
-            ) VALUES (
-                :user_cod, :user_nam, :company_cod, :telephone, :user_pwd, :email, :address, :repeat_count, :rec_tim, :rec_nam
-            )
-            """
-            for person in user_request.authorized_persons.all():
-                generated_user_cod = generate_user_cod(person.name, cursor)
-                password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-                password_hash = hashlib.md5(password.encode()).hexdigest()
-                try:
-                    cursor.execute(insert_sql, {
-                        'user_cod': generated_user_cod,
-                        'user_nam': person.name,
-                        'company_cod': user_request.customer_code,
-                        'telephone': person.phone,
-                        'user_pwd': password_hash,
-                        'email': person.email,
-                        'address': user_request.address,
-                        'rec_tim': user_request.created_at,
-                        'repeat_count': 10,
-                        'rec_nam': 'SYSTEM WEB'
-                    })
-                    print(f"Successfully inserted authorized person {person.name} for request {user_request.id} into Oracle DB.")
+            dsn = f"{oracle_host}:{oracle_port}/{oracle_service_name}"
+            oracledb.init_oracle_client()
+            connection = oracledb.connect(user=oracle_user, password=oracle_password, dsn=dsn)
+            cursor = connection.cursor()
+            
+            # Insert each authorized person into Oracle DB
+            if user_request.customer_code: # Only proceed if customer_code is available
+                created_users = []
+                insert_sql = """
+                INSERT INTO CM_WEB.WEB_USER (
+                    USER_COD, USER_NAM, COMPANY_COD, TELEPHONE, USER_PWD, EMAIL, ADDRESS, REPEAT_COUNT, REC_TIM, REC_NAM
+                ) VALUES (
+                    :user_cod, :user_nam, :company_cod, :telephone, :user_pwd, :email, :address, :repeat_count, :rec_tim, :rec_nam
+                )
+                """
+                for person in user_request.authorized_persons.all():
+                    generated_user_cod = generate_user_cod(person.name, cursor)
+                    password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+                    password_hash = hashlib.md5(password.encode()).hexdigest()
+                    try:
+                        cursor.execute(insert_sql, {
+                            'user_cod': generated_user_cod,
+                            'user_nam': person.name,
+                            'company_cod': user_request.customer_code,
+                            'telephone': person.phone,
+                            'user_pwd': password_hash,
+                            'email': person.email,
+                            'address': user_request.address,
+                            'rec_tim': user_request.created_at,
+                            'repeat_count': 10,
+                            'rec_nam': 'SYSTEM WEB'
+                        })
+                        print(f"Successfully inserted authorized person {person.name} for request {user_request.id} into Oracle DB.")
 
-                    # Insert into RE_USER_ROLE for each customer_role
-                    if user_request.customer_role:
-                        insert_role_sql = """
-                        INSERT INTO CM_WEB.RE_USER_ROLE (ID, USER_COD, ROLE_COD) VALUES (:id, :user_cod, :role_cod)
-                        """
-                        for role in user_request.customer_role:
-                            try:
-                                cursor.execute(insert_role_sql, {
-                                    'id': uuid.uuid4().hex,
-                                    'user_cod': generated_user_cod,
-                                    'role_cod': role
-                                })
-                                print(f"Successfully inserted role {role} for user {generated_user_cod} into RE_USER_ROLE.")
-                            except oracledb.Error as e:
-                                error_obj, = e.args
-                                print(f"Error inserting role {role} for user {generated_user_cod} into RE_USER_ROLE: {error_obj.message}")
-                    else:
-                        print(f"No customer roles found for request {user_request.id}, skipping RE_USER_ROLE insertion for user {generated_user_cod}.")
-                except oracledb.Error as e:
-                    error_obj, = e.args
-                    print(f"Error inserting authorized person {person.name} into Oracle DB: {error_obj.message}")
-            connection.commit()
-            print(f"All authorized persons for request {user_request.id} processed for Oracle DB.")
-        else:
-            print("customer_code is empty, skipping Oracle insertion for authorized persons.")
+                        # Add user to list for email
+                        created_users.append({'user': generated_user_cod, 'pass_user': password})
 
-    except oracledb.Error as e:
-        error_obj, = e.args
-        print(f"Error inserting into Oracle DB: {error_obj.message}")
-        # Optionally, you might want to revert the Django save or log this error more formally
-        # For now, we'll just print and continue, but in a real app, this needs careful handling.
-    except Exception as e:
-        print(f"An unexpected error occurred during Oracle insertion: {e}")
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
+                        # Insert into RE_USER_ROLE for each customer_role
+                        if user_request.customer_role:
+                            insert_role_sql = """
+                            INSERT INTO CM_WEB.RE_USER_ROLE (ID, USER_COD, ROLE_COD) VALUES (:id, :user_cod, :role_cod)
+                            """
+                            for role in user_request.customer_role:
+                                try:
+                                    cursor.execute(insert_role_sql, {
+                                        'id': uuid.uuid4().hex,
+                                        'user_cod': generated_user_cod,
+                                        'role_cod': role
+                                    })
+                                    print(f"Successfully inserted role {role} for user {generated_user_cod} into RE_USER_ROLE.")
+                                except oracledb.Error as e:
+                                    error_obj, = e.args
+                                    print(f"Error inserting role {role} for user {generated_user_cod} into RE_USER_ROLE: {error_obj.message}")
+                        else:
+                            print(f"No customer roles found for request {user_request.id}, skipping RE_USER_ROLE insertion for user {generated_user_cod}.")
+                    except oracledb.Error as e:
+                        error_obj, = e.args
+                        print(f"Error inserting authorized person {person.name} into Oracle DB: {error_obj.message}")
+                connection.commit()
+                print(f"All authorized persons for request {user_request.id} processed for Oracle DB.")
+
+                # Send welcome email
+                if created_users:
+                    send_welcome_email_task.delay(
+                        company_name=user_request.company_name,
+                        user_code=user_request.customer_code,
+                        users=created_users,
+                        recipient_email=user_request.contact_email
+                    )
+                    print(f"Welcome email task queued for request {user_request.id}.")
+            else:
+                print("customer_code is empty, skipping Oracle insertion for authorized persons.")
+
+        except oracledb.Error as e:
+            error_obj, = e.args
+            print(f"Error inserting into Oracle DB: {error_obj.message}")
+            # Optionally, you might want to revert the Django save or log this error more formally
+            # For now, we'll just print and continue, but in a real app, this needs careful handling.
+        except Exception as e:
+            print(f"An unexpected error occurred during Oracle insertion: {e}")
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
     if changes:
         try:
