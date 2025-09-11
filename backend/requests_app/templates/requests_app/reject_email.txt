@@ -1,0 +1,13 @@
+Buenas,
+
+La solicitud del cliente {company_name} fue rechazada. 
+
+Por el motivo: {rejection_reason}
+
+Debe comunicarse con nuestra Dirección Comercial por las siguientes vías:   
+- dc@tcmariel.cu
+- 49397136, 49397137
+
+Al tanto de sus consideraciones.
+
+Disculpe las molestias que esto le pueda ocasionar.

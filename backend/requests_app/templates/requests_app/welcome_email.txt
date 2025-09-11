@@ -1,0 +1,12 @@
+Buenas,
+
+El cliente {company_name} fue creado satisfactoriamente con el código de cliente {user_code}. Este código y nombre son los que usted debe darle a su importadora para que le realice la transferencia de derecho de recogida.
+
+Sus usuarios y contraseñas:
+{users_section}
+
+Recordar que la contraseña debe ser cambiada en el primer inicio de sesión y revisar la diferenciación entre mayúsculas y minúsculas.
+
+La dirección del web portal es http://www.webportal.tcmariel.cu
+
+Al tanto de sus consideraciones.

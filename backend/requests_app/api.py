@@ -20,7 +20,7 @@ from ninja_jwt.tokens import RefreshToken
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from ninja.schema import Schema
-from .tasks import send_2fa_email_task, send_welcome_email_task
+from .tasks import send_2fa_email_task, send_welcome_email_task, send_rejection_email_task
 import random
 import uuid
 import string
@@ -188,9 +188,9 @@ def list_requests(
         except Exception:
             uploaded_files = []
 
-        # Crear o actualizar la solicitud
-        obj, created = UserRequest.objects.update_or_create(
-            id=int(record["id"]),   # usamos el id del WP como PK local
+        # Intenta obtener la solicitud. Si no existe, la crea. No la actualiza.
+        obj, created = UserRequest.objects.get_or_create(
+            id=int(record["id"]),
             defaults={
                 "company_name": record.get("company_name", ""),
                 "address": record.get("address", ""),
@@ -206,23 +206,34 @@ def list_requests(
                 "created_from_ip": record.get("ip_address", ""),
                 "uploaded_files": uploaded_files,
                 "active": True,
-                "created_at": parse_datetime(record.get("created_at")),
+                "created_at": parse_datetime(record.get("created_at")) if record.get("created_at") else datetime.now(),
             },
         )
 
-        # 3. Sync authorized persons
-        obj.authorized_persons.all().delete()  # limpiamos antes de volver a cargar
-        for person in record.get("authorized_persons", []):
-            AuthorizedPerson.objects.create(
-                user_request=obj,
-                name=person.get("name", ""),
-                position=person.get("position", ""),
-                phone=person.get("phone", ""),
-                email=person.get("email") or None,
-                informational=bool(person.get("informational", 0)),
-                operational=bool(person.get("operational", 0)),
-                associated_with=person.get("associated_with", ""),
-            )
+        # Si la solicitud se acaba de crear, también se crean las personas autorizadas.
+        # Si la solicitud ya existía, no se modifica nada.
+        if created:
+            # Consumir el endpoint de WP para confirmar el procesamiento
+            try:
+                wp_url = f"https://www.tcmariel.cu/wp-json/user-record/v1/records/{record['id']}"
+                wp_response = requests.get(wp_url, timeout=10)
+                wp_response.raise_for_status()
+                print(f"Consumido endpoint de WP para solicitud importada {record['id']}. Estado: {wp_response.status_code}")
+            except requests.exceptions.RequestException as e:
+                print(f"Fallo al consumir endpoint de WP para solicitud importada {record['id']}: {e}")
+                
+            # 3. Sync authorized persons
+            for person in record.get("authorized_persons", []):
+                AuthorizedPerson.objects.create(
+                    user_request=obj,
+                    name=person.get("name", ""),
+                    position=person.get("position", ""),
+                    phone=person.get("phone", ""),
+                    email=person.get("email") or None,
+                    informational=bool(person.get("informational", 0)),
+                    operational=bool(person.get("operational", 0)),
+                    associated_with=person.get("associated_with", ""),
+                )
 
     # 4. Query local DB con filtros
     qs = UserRequest.objects.filter(active=True)
@@ -308,6 +319,15 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
             setattr(user_request, field, value)
             changes.append(f"{field} cambiado de '{old_value}' a '{value}'.")
 
+    # Check if status is being updated to "Rechazado" and send email
+    if "status" in payload.dict(exclude_unset=True) and payload.status == "Rechazado":
+        rejection_reason = payload.notes if payload.notes else "No se ha especificado un motivo."
+        send_rejection_email_task.delay(
+            company_name=user_request.company_name,
+            rejection_reason=rejection_reason,
+            recipient_email=user_request.contact_email
+        )
+
     # Handle authorized persons (replace all if provided)
     if payload.authorized_persons is not None:
         user_request.authorized_persons.all().delete()
@@ -328,7 +348,7 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
             user_request.customer_role = new_customer_role
             changes.append(f"customer_role cambiado de '{user_request.customer_role}' a '{new_customer_role}'.")
 
-    if user_request.status == "Completado":
+    if "status" in payload.dict(exclude_unset=True) and payload.status == "Completado":
         connection = None
         cursor = None
         try:

@@ -40,7 +40,7 @@ def send_welcome_email_task(company_name, user_code, users, recipient_email):
     """
     try:
         # Construct the path to the template file
-        template_path = os.path.join(settings.BASE_DIR, '..\example.txt')
+        template_path = os.path.join(settings.BASE_DIR, 'requests_app', 'templates', 'requests_app', 'welcome_email.txt')
 
         with open(template_path, 'r', encoding='utf-8') as f:
             template_content = f.read()
@@ -70,5 +70,37 @@ def send_welcome_email_task(company_name, user_code, users, recipient_email):
         return error_message
     except Exception as e:
         error_message = f"Failed to send welcome email to {recipient_email}: {e}"
+        print(error_message)
+        return error_message
+
+@shared_task(name="send_rejection_email_task")
+def send_rejection_email_task(company_name, rejection_reason, recipient_email):
+    """
+    Sends a rejection email to the user.
+    """
+    try:
+        template_path = os.path.join(settings.BASE_DIR, 'requests_app', 'templates', 'requests_app', 'reject_email.txt')
+
+        with open(template_path, 'r', encoding='utf-8') as f:
+            template_content = f.read()
+
+        body = template_content.format(
+            company_name=company_name,
+            rejection_reason=rejection_reason
+        )
+
+        subject = f'Solicitud Rechazada: {company_name}'
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [recipient_email]
+
+        send_mail(subject, body, from_email, recipient_list, fail_silently=False)
+
+        return f"Rejection email sent to {recipient_email}"
+    except FileNotFoundError:
+        error_message = f"Email template not found at {template_path}"
+        print(error_message)
+        return error_message
+    except Exception as e:
+        error_message = f"Failed to send rejection email to {recipient_email}: {e}"
         print(error_message)
         return error_message
