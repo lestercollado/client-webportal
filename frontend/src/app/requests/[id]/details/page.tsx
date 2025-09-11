@@ -9,7 +9,6 @@ import RequestDetails from '@/app/components/RequestDetails';
 import Header from '@/app/components/Header';
 import { toast } from 'sonner';
 import ApproveConfirmationModal from '@/app/components/ApproveConfirmationModal';
-import ConfirmationModal from '@/app/components/ConfirmationModal';
 import RejectConfirmationModal from '@/app/components/RejectConfirmationModal';
 
 export default function RequestDetailsPage() {
@@ -181,16 +180,6 @@ export default function RequestDetailsPage() {
         onConfirm={handleReject}
         title="Confirmar Rechazo"
         message="Por favor, especifique el motivo del rechazo para esta solicitud."
-      />
-
-      <ConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-        title="Eliminar Solicitud"
-        description="¿Estás seguro de que quieres eliminar esta solicitud? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
       />
     </main>
   );

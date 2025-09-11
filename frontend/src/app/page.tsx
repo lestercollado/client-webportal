@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import RequestList from './components/RequestList';
 import { useAuth } from '@/context/AuthContext';
 import Header from './components/Header';
@@ -37,12 +36,6 @@ export default function Home() {
         <Header />
         
         <DashboardStats refreshTrigger={refreshTrigger} />
-
-        <div className="flex justify-end mb-4">
-          <Link href="/requests/new" className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              Crear Nueva Solicitud
-          </Link>
-        </div>
 
         <div>
           <RequestList limit={10} showControls={false} onDataChange={handleDataChange} />

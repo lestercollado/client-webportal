@@ -77,7 +77,7 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
 
         {request.notes && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Notas Adicionales</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Motivo del Rechazo</h3>
             <p className="text-lg text-gray-900 whitespace-pre-wrap bg-gray-50 p-4 rounded-md">{request.notes}</p>
           </div>
         )}

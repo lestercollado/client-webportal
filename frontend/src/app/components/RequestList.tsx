@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { getRequests, UserRequest, deleteRequest, updateRequestDetails } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import ConfirmationModal from './ConfirmationModal';
 import ApproveConfirmationModal from './ApproveConfirmationModal';
 import RejectConfirmationModal from './RejectConfirmationModal';
 
@@ -260,13 +259,6 @@ const RequestList = ({
 
   return (
     <>
-      <ConfirmationModal
-        isOpen={confirmationState.isOpen}
-        onClose={() => setConfirmationState({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
-        onConfirm={confirmationState.onConfirm}
-        title={confirmationState.title}
-        message={confirmationState.message}
-      />
       <ApproveConfirmationModal
         isOpen={approveModalState.isOpen}
         onClose={() => setApproveModalState({ isOpen: false, title: '', message: '', initialCustomerCode: '', initialCustomerRole: [], onConfirm: () => {} })}
