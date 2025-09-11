@@ -309,8 +309,6 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
         connection = oracledb.connect(user=oracle_user, password=oracle_password, dsn=dsn)
         cursor = connection.cursor()
         
-        print("222222222",user_request)
-        print("44444",user_request.customer_role)
         # Insert each authorized person into Oracle DB
         if user_request.customer_code: # Only proceed if customer_code is available
             insert_sql = """
@@ -344,7 +342,7 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
                         for role in user_request.customer_role:
                             try:
                                 cursor.execute(insert_role_sql, {
-                                    'id': str(uuid.uuid4()),
+                                    'id': uuid.uuid4().hex,
                                     'user_cod': generated_user_cod,
                                     'role_cod': role
                                 })
@@ -358,7 +356,6 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
                     error_obj, = e.args
                     print(f"Error inserting authorized person {person.name} into Oracle DB: {error_obj.message}")
             connection.commit()
-            print(11111100000000)
             print(f"All authorized persons for request {user_request.id} processed for Oracle DB.")
         else:
             print("customer_code is empty, skipping Oracle insertion for authorized persons.")

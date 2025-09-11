@@ -37,6 +37,7 @@ export interface UserRequest {
   created_by_username?: string;
   created_from_ip: string;
   customer_code: string;
+  customer_role: string[];
   // Fields from backend schema
   company_name: string;
   address: string;

@@ -68,7 +68,8 @@ const RequestList = ({
     title: '',
     message: '',
     initialCustomerCode: '',
-    onConfirm: (customerCode: string) => {},
+    initialCustomerRole: [] as string[],
+    onConfirm: (customerCode: string, customerRole: string[]) => {},
   });
 
   const [rejectModalState, setRejectModalState] = useState({
@@ -149,12 +150,14 @@ const RequestList = ({
       title: 'Confirmar Aprobación',
       message: `Vas a aprobar la solicitud. Por favor, escriba el código de cliente, creado previamente en el CiTOS`,
       initialCustomerCode: requestToApprove.customer_code,
-      onConfirm: async (customerCode: string) => {
+      initialCustomerRole: requestToApprove.customer_role || [],
+      onConfirm: async (customerCode: string, customerRole: string[]) => {
         if (!auth?.token) return toast.error('No estás autenticado.');
         try {
           const updatedRequest = await updateRequestDetails(id, { 
             status: 'Completado',
-            customer_code: customerCode
+            customer_code: customerCode,
+            customer_role: customerRole
           });
           updateRequestInList(updatedRequest);
           toast.success('Solicitud aprobada con éxito.');
@@ -162,7 +165,7 @@ const RequestList = ({
         } catch (error: any) {
           toast.error(error.message || 'Error al aprobar la solicitud.');
         }
-        setApproveModalState({ isOpen: false, title: '', message: '', initialCustomerCode: '', onConfirm: () => {} });
+        setApproveModalState({ isOpen: false, title: '', message: '', initialCustomerCode: '', initialCustomerRole: [], onConfirm: () => {} });
       },
     });
   };
@@ -266,11 +269,12 @@ const RequestList = ({
       />
       <ApproveConfirmationModal
         isOpen={approveModalState.isOpen}
-        onClose={() => setApproveModalState({ isOpen: false, title: '', message: '', initialCustomerCode: '', onConfirm: () => {} })}
+        onClose={() => setApproveModalState({ isOpen: false, title: '', message: '', initialCustomerCode: '', initialCustomerRole: [], onConfirm: () => {} })}
         onConfirm={approveModalState.onConfirm}
         title={approveModalState.title}
         message={approveModalState.message}
         initialCustomerCode={approveModalState.initialCustomerCode}
+        initialCustomerRole={approveModalState.initialCustomerRole}
       />
       <RejectConfirmationModal
         isOpen={rejectModalState.isOpen}
