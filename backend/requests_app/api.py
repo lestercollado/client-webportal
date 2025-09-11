@@ -206,6 +206,7 @@ def list_requests(
                 "created_from_ip": record.get("ip_address", ""),
                 "uploaded_files": uploaded_files,
                 "active": True,
+                "status": "Pendiente",
                 "created_at": parse_datetime(record.get("created_at")) if record.get("created_at") else datetime.now(),
             },
         )
@@ -221,7 +222,6 @@ def list_requests(
                 print(f"Consumido endpoint de WP para solicitud importada {record['id']}. Estado: {wp_response.status_code}")
             except requests.exceptions.RequestException as e:
                 print(f"Fallo al consumir endpoint de WP para solicitud importada {record['id']}: {e}")
-                
             # 3. Sync authorized persons
             for person in record.get("authorized_persons", []):
                 AuthorizedPerson.objects.create(
