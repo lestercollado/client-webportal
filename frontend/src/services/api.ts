@@ -30,7 +30,7 @@ export interface UserRequest {
   id: number;
   status: string;
   created_at: string;
-  attachments: Attachment[];
+  uploaded_files: string[];
   history: RequestHistory[];
   note_reject?: string;
   notes?: string;

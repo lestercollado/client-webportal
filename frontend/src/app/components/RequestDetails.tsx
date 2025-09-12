@@ -1,9 +1,27 @@
 import React from 'react';
 import { UserRequest } from '@/services/api';
+import { FaFilePdf, FaFileWord, FaFileImage, FaFile } from 'react-icons/fa';
 
 interface Props {
   request: UserRequest;
 }
+
+const getFileIcon = (fileUrl: string) => {
+    const extension = fileUrl.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return <FaFilePdf className="h-6 w-6" />;
+      case 'doc':
+      case 'docx':
+        return <FaFileWord className="h-6 w-6" />;
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+        return <FaFileImage className="h-6 w-6" />;
+      default:
+        return <FaFile className="h-6 w-6" />;
+    }
+  };
 
 const getStatusBadge = (status: string) => {
     switch (status) {
@@ -107,24 +125,24 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
       )}
 
       {/* Attachments */}
-      {request.attachments && request.attachments.length > 0 && (
+      {request.uploaded_files && request.uploaded_files.length > 0 && (
         <div className="mb-6 pb-6 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Archivos Adjuntos</h3>
-          <ul className="list-disc list-inside bg-gray-50 p-4 rounded-md">
-            {request.attachments.map(att => (
-              <li key={att.id}>
-                <a
-                  href={`${process.env.NEXT_PUBLIC_API_URL}${att.file_url}`}
-                  download={att.original_filename}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-indigo-600 hover:underline"
-                >
-                  {att.original_filename || `Archivo ${att.id}`}
-                </a>
-              </li>
+          <div className="flex flex-wrap gap-4">
+            {request.uploaded_files.map(att => (
+              <a
+                key={att}
+                href={`https://www.tcmariel.cu/wp-content/uploads/users-webportal/${att}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={att || 'Descargar'}
+                className="flex items-center space-x-2 text-gray-500 hover:text-indigo-600 transition-colors"
+              >
+                <span>{getFileIcon(att)}</span>
+                <span>{att}</span>
+              </a>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 

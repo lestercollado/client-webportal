@@ -163,9 +163,8 @@ from django.utils.dateparse import parse_datetime
 def list_requests(
     request,
     status: Optional[str] = None,
+    customer_code: Optional[str] = None,
     company_name: Optional[str] = None,
-    email: Optional[str] = None,
-    customer_role: Optional[str] = None,
 ):
     """
     Sincroniza solicitudes desde el endpoint de WordPress
@@ -173,7 +172,7 @@ def list_requests(
     """
     # 1. Fetch data from external WP endpoint
     try:
-        response = requests.get("https://www.tcmariel.cu/wp-json/user-record/v1/records", timeout=15)
+        response = requests.get("https://www.tcmariel.cu/wp-json/user-record/v1/records", auth=(settings.WP_USER, settings.WP_PASSWORD), timeout=15)
         response.raise_for_status()
         external_data = response.json()
     except Exception as e:
@@ -255,7 +254,7 @@ def list_requests(
             # Consumir el endpoint de WP para confirmar el procesamiento
             try:
                 wp_url = f"https://www.tcmariel.cu/wp-json/user-record/v1/records/{record['id']}"
-                wp_response = requests.get(wp_url, timeout=10)
+                wp_response = requests.get(wp_url, auth=(settings.WP_USER, settings.WP_PASSWORD), timeout=10)
                 wp_response.raise_for_status()
                 print(f"Consumido endpoint de WP para solicitud importada {record['id']}. Estado: {wp_response.status_code}")
             except requests.exceptions.RequestException as e:
@@ -278,14 +277,10 @@ def list_requests(
 
     if status:
         qs = qs.filter(status=status)
+    if customer_code:
+        qs = qs.filter(customer_code__icontains=customer_code)
     if company_name:
         qs = qs.filter(company_name__icontains=company_name)
-    if email:
-        qs = qs.filter(email__icontains=email)
-    if customer_role:
-        # Para buscar en un JSONField que contiene una lista de strings
-        # customer_role aquí es el valor del filtro, que debería ser un solo rol
-        qs = qs.filter(customer_role__contains=[customer_role])
 
     # Asegurarse de que customer_role sea una lista para cada objeto antes de devolverlo
     # Convertir el queryset a una lista para poder modificar los objetos

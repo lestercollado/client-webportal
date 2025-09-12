@@ -52,8 +52,7 @@ const RequestList = ({
   const [filters, setFilters] = useState({
     status: '',
     customer_code: '',
-    contact_email: '',
-    customer_role: ''
+    company_name: '',
   });
 
   const [confirmationState, setConfirmationState] = useState({
@@ -94,8 +93,7 @@ const RequestList = ({
       if (limit) params.append('limit', limit.toString());
       if (filters.status) params.append('status', filters.status);
       if (filters.customer_code) params.append('customer_code', filters.customer_code);
-      if (filters.contact_email) params.append('contact_email', filters.contact_email);
-      if (filters.customer_role) params.append('customer_role', filters.customer_role);
+      if (filters.company_name) params.append('company_name', filters.company_name);
 
       const data = await getRequests(params);
       
@@ -275,27 +273,12 @@ const RequestList = ({
           />
           <input
             type="text"
-            name="contact_email"
-            placeholder="Filtrar por email..."
-            value={filters.contact_email}
+            name="company_name"
+            placeholder="Filtrar por empresa..."
+            value={filters.company_name}
             onChange={handleFilterChange}
             className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
-          <select
-            name="customer_role"
-            value={filters.customer_role}
-            onChange={handleFilterChange}
-            className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          >
-            <option value="">Todos los grupos</option>
-            <option value="Cliente Final">Cliente Final</option>
-              <option value="Importador">Importador</option>
-              <option value="Transportista">Transportista</option>
-              <option value="IMPORT-TRANSP">IMPORT-TRANSP</option>
-              <option value="NAV-INFO-OPER">NAV-INFO-OPER</option>
-              <option value="IMPORT-INFO-OPER">IMPORT-INFO-OPER</option>
-              <option value="Navieras">Navieras</option>
-          </select>
           <select
             name="status"
             value={filters.status}
@@ -347,7 +330,7 @@ const RequestList = ({
                   <td className="px-2 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     <div className="flex items-center space-x-2">
                       {req.different && (
-                        <FaExclamationTriangle className="h-5 w-5 text-red-500" title="Cliente existente" />
+                        <FaExclamationTriangle className="h-5 w-5 text-yellow-500" title="Cliente existente" />
                       )}
                       {req.notes && (
                         <FaStickyNote className="h-5 w-5 text-green-500" title="Nota aclaratoria" />
@@ -360,7 +343,6 @@ const RequestList = ({
                     <div className="flex items-center space-x-2">
                       {req.uploaded_files && req.uploaded_files.length > 0 ? (
                         req.uploaded_files.map((att) => (
-                          console.log(att),
                           <a
                             key={att}
                             href={`https://www.tcmariel.cu/wp-content/uploads/users-webportal/${att}`}
