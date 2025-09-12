@@ -237,3 +237,38 @@ export async function getRequestDetails(id: number) {
   });
   return res.json();
 }
+
+export const downloadAttachment = async (fileName: string, forceDisposition?: 'inline' | 'attachment') => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/download_attachment/${fileName}`);
+  
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  // Determine the disposition
+  const serverDisposition = response.headers.get('Content-Disposition');
+  let finalDisposition = 'attachment'; // Default to download
+
+  if (forceDisposition) {
+    finalDisposition = forceDisposition;
+  } else if (serverDisposition && serverDisposition.indexOf('inline') !== -1) {
+    finalDisposition = 'inline';
+  }
+
+  if (finalDisposition === 'inline') {
+    // Open in new tab (View)
+    const newTab = window.open(url, '_blank');
+    if(newTab){
+        newTab.focus();
+    }
+    // The object URL will be revoked when the tab is closed by the browser.
+  } else {
+    // Trigger download (Download)
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  }
+};

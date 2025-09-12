@@ -1,6 +1,6 @@
 import React from 'react';
-import { UserRequest } from '@/services/api';
-import { FaFilePdf, FaFileWord, FaFileImage, FaFile } from 'react-icons/fa';
+import { UserRequest, downloadAttachment } from '@/services/api';
+import { FaFilePdf, FaFileWord, FaFileImage, FaFile, FaEye, FaDownload } from 'react-icons/fa';
 
 interface Props {
   request: UserRequest;
@@ -128,21 +128,34 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
       {request.uploaded_files && request.uploaded_files.length > 0 && (
         <div className="mb-6 pb-6 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Archivos Adjuntos</h3>
-          <div className="flex flex-wrap gap-4">
+          <ul className="space-y-3">
             {request.uploaded_files.map(att => (
-              <a
-                key={att}
-                href={`https://www.tcmariel.cu/wp-content/uploads/users-webportal/${att}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={att || 'Descargar'}
-                className="flex items-center space-x-2 text-gray-500 hover:text-indigo-600 transition-colors"
-              >
-                <span>{getFileIcon(att)}</span>
-                <span>{att}</span>
-              </a>
+              <li key={att} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100">
+                <div className="flex items-center space-x-3 truncate">
+                  <span className="text-gray-500 flex-shrink-0">{getFileIcon(att)}</span>
+                  <span className="text-sm font-medium text-gray-800 truncate" title={att}>
+                    {att.split('/').pop() || att}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-4 flex-shrink-0">
+                  <button
+                    onClick={() => downloadAttachment(att, 'inline')}
+                    title="Ver archivo"
+                    className="text-gray-500 hover:text-indigo-600 transition-colors"
+                  >
+                    <FaEye className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => downloadAttachment(att, 'attachment')}
+                    title="Descargar archivo"
+                    className="text-gray-500 hover:text-indigo-600 transition-colors"
+                  >
+                    <FaDownload className="h-5 w-5" />
+                  </button>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
 

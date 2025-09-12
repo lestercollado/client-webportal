@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { getRequests, UserRequest, deleteRequest, updateRequestDetails } from '@/services/api';
+import { getRequests, UserRequest, deleteRequest, updateRequestDetails, downloadAttachment } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import ApproveConfirmationModal from './ApproveConfirmationModal';
@@ -343,16 +343,14 @@ const RequestList = ({
                     <div className="flex items-center space-x-2">
                       {req.uploaded_files && req.uploaded_files.length > 0 ? (
                         req.uploaded_files.map((att) => (
-                          <a
+                          <button
                             key={att}
-                            href={`https://www.tcmariel.cu/wp-content/uploads/users-webportal/${att}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={att || 'Descargar'}
+                            onClick={() => downloadAttachment(att, 'inline')}
+                            title={att.split('/').pop() || att || 'Ver archivo'}
                             className="text-gray-500 hover:text-indigo-600"
                           >
                             {getFileIcon(att)}
-                          </a>
+                          </button>
                         ))
                       ) : (
                         <span className="text-gray-500">-</span>

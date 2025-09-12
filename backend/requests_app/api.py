@@ -1,4 +1,5 @@
 from typing import List, Optional
+from django.http import StreamingHttpResponse
 from ninja import Router
 from django.shortcuts import get_object_or_404
 import oracledb
@@ -304,6 +305,47 @@ def get_request(request, request_id: int):
         user_request.customer_role = []
     return user_request
 
+
+@router.get("/download_attachment/{file_name}")
+def download_attachment(request, file_name: str):
+    """
+    Downloads an attachment from the WordPress endpoint with authentication,
+    acting as a proxy.
+    """
+    wp_url = f"https://www.tcmariel.cu/wp-json/user-record/v1/download/{file_name}"
+    
+    try:
+        response = requests.get(
+            wp_url,
+            auth=(settings.WP_USER, settings.WP_PASSWORD),
+            stream=True,
+            timeout=30
+        )
+        response.raise_for_status()
+
+        # Get headers from the upstream response
+        content_type = response.headers.get('Content-Type', 'application/octet-stream')
+        content_disposition = response.headers.get('Content-Disposition')
+
+        # Create a streaming HTTP response.
+        streaming_response = StreamingHttpResponse(
+            response.iter_content(chunk_size=8192),
+            content_type=content_type
+        )
+        
+        # If the upstream server sent a Content-Disposition, use it.
+        if content_disposition:
+            streaming_response['Content-Disposition'] = content_disposition
+        else:
+            streaming_response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+        
+        # Expose the Content-Disposition header to the browser for CORS requests
+        streaming_response['Access-Control-Expose-Headers'] = 'Content-Disposition'
+        
+        return streaming_response
+
+    except Exception as e:
+        return 404, {"message": f"Failed to download file: {e}"}
 
 @router.post("/", response={200: UserRequestSchema, 400: MessageOut})
 def create_request(request, payload: UserRequestCreateSchema):
