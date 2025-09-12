@@ -350,7 +350,7 @@ const RequestList = ({
                         <FaExclamationTriangle className="h-5 w-5 text-red-500" title="Cliente existente" />
                       )}
                       {req.notes && (
-                        <FaStickyNote className="h-5 w-5 text-green-500" />
+                        <FaStickyNote className="h-5 w-5 text-green-500" title="Nota aclaratoria" />
                       )}
                     </div>
                   </td>
@@ -387,17 +387,13 @@ const RequestList = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-3">
-                      {req.status !== 'Completado' && (
+                      {req.status === 'Pendiente' && (
                         <>
                           <button onClick={() => handleApprove(req.id)} title="Aprobar" className="text-green-600 hover:text-green-900">
                             <FaCheck className="h-5 w-5" />
                           </button>
 
-                          {req.status !== 'Rechazado' && (
-                            <button onClick={() => handleReject(req.id)} title="Rechazar" className="text-red-600 hover:text-red-900">
-                              <FaTimes className="h-5 w-5" />
-                            </button>
-                          )} 
+                          
                           {/* <button onClick={() => router.push(`/requests/${req.id}/edit`)} title="Editar" className="text-blue-600 hover:text-blue-900">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
@@ -407,6 +403,11 @@ const RequestList = ({
 
                         </>
                       )}
+                      {req.status === 'Pendiente' && (
+                            <button onClick={() => handleReject(req.id)} title="Rechazar" className="text-red-600 hover:text-red-900">
+                              <FaTimes className="h-5 w-5" />
+                            </button>
+                          )} 
                       
                       {/* Botón Detalles */}
                       <button

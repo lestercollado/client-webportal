@@ -108,7 +108,7 @@ export default function RequestDetailsPage() {
                     Detalles de la Solicitud #{id}
                 </h1>
                 <div className="flex items-center space-x-4">
-                    {request?.status !== 'Completado' && (
+                    {request?.status === 'Pendiente' && (
                         <>
                             <button 
                                 onClick={() => setIsApproveModalOpen(true)} 
@@ -117,17 +117,6 @@ export default function RequestDetailsPage() {
                             >
                                 <FaCheck className="h-5 w-5" />
                             </button>
-
-                            {request?.status !== 'Rechazado' && (
-                                <button 
-                                    onClick={() => setIsRejectModalOpen(true)} 
-                                    title="Rechazar" 
-                                    className="text-red-600 hover:text-red-900"
-                                >
-                                    <FaTimes className="h-5 w-5" />
-                                </button>
-                            )}
-
                             {/* <Link 
                                 href={`/requests/${id}/edit`} 
                                 title="Editar" 
@@ -149,6 +138,15 @@ export default function RequestDetailsPage() {
                                 </svg>
                             </button> */}
                         </>
+                    )}
+                    {request?.status === 'Pendiente' && (
+                                <button 
+                                    onClick={() => setIsRejectModalOpen(true)} 
+                                    title="Rechazar" 
+                                    className="text-red-600 hover:text-red-900"
+                                >
+                                    <FaTimes className="h-5 w-5" />
+                                </button>
                     )}
                 </div>
                 
