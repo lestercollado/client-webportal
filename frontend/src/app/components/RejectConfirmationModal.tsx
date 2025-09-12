@@ -5,19 +5,19 @@ import React, { useState } from 'react';
 interface RejectConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (notes: string) => void;
+  onConfirm: (reason: string) => void;
   title: string;
   message: string;
 }
 
 const RejectConfirmationModal: React.FC<RejectConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, message }) => {
-  const [notes, setNotes] = useState('');
+  const [reason, setReason] = useState('');
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    if (notes.trim()) {
-      onConfirm(notes);
+    if (reason.trim()) {
+      onConfirm(reason);
     }
   };
 
@@ -32,8 +32,8 @@ const RejectConfirmationModal: React.FC<RejectConfirmationModalProps> = ({ isOpe
           </label>
           <textarea
             id="rejection-notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             rows={4}
             placeholder="Escriba aquí el motivo del rechazo..."
@@ -48,7 +48,7 @@ const RejectConfirmationModal: React.FC<RejectConfirmationModalProps> = ({ isOpe
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!notes.trim()}
+            disabled={!reason.trim()}
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-300 disabled:cursor-not-allowed"
           >
             Confirmar Rechazo

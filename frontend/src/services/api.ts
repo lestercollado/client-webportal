@@ -32,6 +32,7 @@ export interface UserRequest {
   created_at: string;
   attachments: Attachment[];
   history: RequestHistory[];
+  note_reject?: string;
   notes?: string;
   authorized_persons: AuthorizedPerson[];
   created_by_username?: string;
@@ -183,7 +184,7 @@ export const getRequestById = async (id: number): Promise<UserRequest> => {
   return response.json();
 };
 
-export const updateRequestDetails = async (id: number, data: { notes?: string; customer_code?: string; customer_role?: string[]; status?: string }): Promise<UserRequest> => {
+export const updateRequestDetails = async (id: number, data: { note_reject?: string; customer_code?: string; customer_role?: string[]; status?: string }): Promise<UserRequest> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/api/requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),

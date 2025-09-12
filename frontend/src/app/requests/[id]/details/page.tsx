@@ -60,7 +60,7 @@ export default function RequestDetailsPage() {
   };
 
   const handleReject = (reason: string) => {
-    updateRequestDetails(id, { status: 'Rechazado', notes: reason })
+    updateRequestDetails(id, { status: 'Rechazado', note_reject: reason })
       .then(() => {
         toast.success('Solicitud rechazada con éxito.');
         fetchRequest();

@@ -75,7 +75,7 @@ const RequestList = ({
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: (notes: string) => {},
+    onConfirm: (reason: string) => {},
   });
 
   const fetchRequests = async () => {
@@ -174,13 +174,13 @@ const RequestList = ({
       isOpen: true,
       title: 'Confirmar Rechazo',
       message: 'Por favor, especifique el motivo del rechazo para esta solicitud.',
-      onConfirm: async (notes: string) => {
+      onConfirm: async (reason: string) => {
         if (!auth?.token) {
           toast.error('No estás autenticado.');
           return;
         }
         try {
-          const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado', notes });
+          const updatedRequest = await updateRequestDetails(id, { status: 'Rechazado', note_reject: reason });
           updateRequestInList(updatedRequest);
           toast.success('Solicitud rechazada con éxito.');
           if (onDataChange) onDataChange();
@@ -334,6 +334,7 @@ const RequestList = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th scope="col" className="px-2 py-3"></th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Código Cliente
               </th>
@@ -358,6 +359,13 @@ const RequestList = ({
             {requests.length > 0 ? (
               requests.map((req) => (
                 <tr key={req.id}>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {req.notes && (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm2 1a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1V6a1 1 0 00-1-1H6zM4 12a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H5z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.customer_code}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.company_name}</td>                
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -433,7 +441,7 @@ const RequestList = ({
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                   No hay solicitudes para mostrar.
                 </td>
               </tr>

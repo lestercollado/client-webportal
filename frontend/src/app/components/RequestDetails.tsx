@@ -24,6 +24,24 @@ const DetailItem: React.FC<{ label: string; value?: string | null }> = ({ label,
 const RequestDetails: React.FC<Props> = ({ request }) => {
   return (
     <div>
+      {/* Request Status and Metadata */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pb-6 border-b border-gray-200">
+        <div>
+            <p className="text-sm font-medium mb-2 text-gray-500">Estado</p>
+            <div className="text-lg font-semibold text-gray-900 flex items-center">
+                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(request.status)}`}>
+                    {request.status}
+                </span>
+                {request.status === 'Rechazado' && request.note_reject && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">({request.note_reject})</span>
+                )}
+            </div>
+        </div>
+        <DetailItem label="Fecha de Creación" value={new Date(request.created_at).toLocaleString()} />
+        {/* <DetailItem label="Creado por" value={request.created_by_username ?? 'WebTCM'} /> */}
+        <DetailItem label="IP de Origen" value={request.created_from_ip} />
+      </div>
+
       {/* Company Details */}
       <div className="mb-6 pb-6 border-b border-gray-200">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Detalles de la Empresa</h3>
@@ -58,33 +76,11 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
             <DetailItem label="Teléfono" value={request.contact_phone} />
             <DetailItem label="Email" value={request.contact_email} />
         </div>
-      </div>
-
-      {/* Request Status and Metadata */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div>
-            <p className="text-sm font-medium text-gray-500">Estado</p>
-            <p className="text-lg font-semibold text-gray-900">
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(request.status)}`}>
-                    {request.status}
-                </span>
-            </p>
-        </div>
-        <DetailItem label="Fecha de Creación" value={new Date(request.created_at).toLocaleString()} />
-        <DetailItem label="Creado por" value={request.created_by_username ?? 'WebTCM'} />
-        <DetailItem label="IP de Origen" value={request.created_from_ip} />
-      </div>
-
-        {request.notes && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Motivo del Rechazo</h3>
-            <p className="text-lg text-gray-900 whitespace-pre-wrap bg-gray-50 p-4 rounded-md">{request.notes}</p>
-          </div>
-        )}
+      </div>      
 
       {/* Authorized Persons */}
       {request.authorized_persons && request.authorized_persons.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-6 pb-6 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Personas Autorizadas</h3>
           <ul className="divide-y divide-gray-200 border border-gray-200 rounded-md">
             {request.authorized_persons.map(person => (
@@ -112,8 +108,8 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
 
       {/* Attachments */}
       {request.attachments && request.attachments.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Archivos Adjuntos</h3>
+        <div className="mb-6 pb-6 border-b border-gray-200">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Archivos Adjuntos</h3>
           <ul className="list-disc list-inside bg-gray-50 p-4 rounded-md">
             {request.attachments.map(att => (
               <li key={att.id}>
@@ -129,6 +125,13 @@ const RequestDetails: React.FC<Props> = ({ request }) => {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {request.notes && (
+        <div className="mb-6 pb-6 border-b border-gray-200">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Notas Adicionales</h3>
+          <p className="text-lg text-gray-900 whitespace-pre-wrap bg-gray-50 p-4 rounded-md">{request.notes}</p>
         </div>
       )}
 

@@ -208,6 +208,7 @@ def list_requests(
                 "active": True,
                 "status": "Pendiente",
                 "created_at": parse_datetime(record.get("created_at")) if record.get("created_at") else datetime.now(),
+                "notes": record.get("notes", ""),
             },
         )
 
@@ -321,7 +322,7 @@ def update_request(request, request_id: int, payload: UserRequestUpdateSchema):
 
     # Check if status is being updated to "Rechazado" and send email
     if "status" in payload.dict(exclude_unset=True) and payload.status == "Rechazado":
-        rejection_reason = payload.notes if payload.notes else "No se ha especificado un motivo."
+        rejection_reason = payload.note_reject if payload.note_reject else "No se ha especificado un motivo."
         send_rejection_email_task.delay(
             company_name=user_request.company_name,
             rejection_reason=rejection_reason,

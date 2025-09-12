@@ -65,6 +65,7 @@ class UserRequestListSchema(Schema):
     created_from_ip: Optional[str] = None   
     uploaded_files: List[str] = []
     customer_code: Optional[str] = None
+    note_reject: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -126,7 +127,7 @@ class UserRequestUpdateSchema(Schema):
     status: Optional[str] = None
     uploaded_files: Optional[List[str]] = None
     authorized_persons: Optional[List[AuthorizedPersonCreateSchema]] = None
-    notes: Optional[str] = None
+    note_reject: Optional[str] = None
 
 
 # -----------------------------
