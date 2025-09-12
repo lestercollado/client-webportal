@@ -67,6 +67,7 @@ class UserRequestListSchema(Schema):
     customer_code: Optional[str] = None
     note_reject: Optional[str] = None
     notes: Optional[str] = None
+    different: bool
 
 
     @staticmethod

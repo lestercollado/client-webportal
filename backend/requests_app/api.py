@@ -188,6 +188,41 @@ def list_requests(
         except Exception:
             uploaded_files = []
 
+        # Check if client exists in Oracle DB by tax_id (NIT)
+        tax_id = record.get("tax_id")
+        different = False
+        customer_code_from_oracle = None
+        if tax_id:
+            connection = None
+            cursor = None
+            try:
+                oracle_user = settings.ORACLE_DB_USER
+                oracle_password = settings.ORACLE_DB_PASSWORD
+                oracle_host = settings.ORACLE_DB_HOST
+                oracle_port = settings.ORACLE_DB_PORT
+                oracle_service_name = settings.ORACLE_DB_SERVICE_NAME
+
+                dsn = f"{oracle_host}:{oracle_port}/{oracle_service_name}"
+                oracledb.init_oracle_client()
+                connection = oracledb.connect(user=oracle_user, password=oracle_password, dsn=dsn)
+                cursor = connection.cursor()
+                
+                cursor.execute("SELECT CLIENT_COD FROM CM_MIS.C_CLIENT_COD WHERE NIT = :tax_id", {'tax_id': tax_id})
+                result = cursor.fetchone()
+                if result:
+                    different = True
+                    customer_code_from_oracle = result[0]
+            except oracledb.Error as e:
+                error_obj, = e.args
+                print(f"Oracle DB error while checking NIT: {error_obj.message}")
+            except Exception as e:
+                print(f"An unexpected error occurred during Oracle check: {e}")
+            finally:
+                if cursor:
+                    cursor.close()
+                if connection:
+                    connection.close()
+
         # Intenta obtener la solicitud. Si no existe, la crea. No la actualiza.
         obj, created = UserRequest.objects.get_or_create(
             id=int(record["id"]),
@@ -198,7 +233,7 @@ def list_requests(
                 "state": record.get("state", ""),
                 "phone": record.get("phone", ""),
                 "email": record.get("email", ""),
-                "tax_id": record.get("tax_id", ""),
+                "tax_id": tax_id,
                 "contact_name": record.get("contact_name", ""),
                 "contact_position": record.get("contact_position", ""),
                 "contact_phone": record.get("contact_phone", ""),
@@ -209,6 +244,8 @@ def list_requests(
                 "status": "Pendiente",
                 "created_at": parse_datetime(record.get("created_at")) if record.get("created_at") else datetime.now(),
                 "notes": record.get("notes", ""),
+                "different": different,
+                "customer_code": customer_code_from_oracle,
             },
         )
 

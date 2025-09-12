@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import ApproveConfirmationModal from './ApproveConfirmationModal';
 import RejectConfirmationModal from './RejectConfirmationModal';
+import { FaStickyNote, FaFilePdf, FaFileWord, FaFileImage, FaFile, FaExclamationTriangle, FaCheck, FaTimes, FaEye } from 'react-icons/fa';
 
 interface RequestListProps {
   limit?: number;
@@ -225,32 +226,16 @@ const RequestList = ({
     const extension = fileUrl.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V9a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2z" />
-          </svg>
-        );
+        return <FaFilePdf className="h-6 w-6" />;
       case 'doc':
       case 'docx':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        );
+        return <FaFileWord className="h-6 w-6" />;
       case 'png':
       case 'jpg':
       case 'jpeg':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        );
+        return <FaFileImage className="h-6 w-6" />;
       default:
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0011.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        );
+        return <FaFile className="h-6 w-6" />;
     }
   };
 
@@ -360,11 +345,14 @@ const RequestList = ({
               requests.map((req) => (
                 <tr key={req.id}>
                   <td className="px-2 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {req.notes && (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm2 1a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1V6a1 1 0 00-1-1H6zM4 12a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H5z" clipRule="evenodd" />
-                      </svg>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      {req.different && (
+                        <FaExclamationTriangle className="h-5 w-5 text-red-500" title="Cliente existente" />
+                      )}
+                      {req.notes && (
+                        <FaStickyNote className="h-5 w-5 text-green-500" />
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{req.customer_code}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.company_name}</td>                
@@ -402,16 +390,12 @@ const RequestList = ({
                       {req.status !== 'Completado' && (
                         <>
                           <button onClick={() => handleApprove(req.id)} title="Aprobar" className="text-green-600 hover:text-green-900">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
+                            <FaCheck className="h-5 w-5" />
                           </button>
 
                           {req.status !== 'Rechazado' && (
                             <button onClick={() => handleReject(req.id)} title="Rechazar" className="text-red-600 hover:text-red-900">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
+                              <FaTimes className="h-5 w-5" />
                             </button>
                           )} 
                           {/* <button onClick={() => router.push(`/requests/${req.id}/edit`)} title="Editar" className="text-blue-600 hover:text-blue-900">
@@ -430,10 +414,7 @@ const RequestList = ({
                         title="Ver detalles"
                         className="text-indigo-600 hover:text-indigo-900"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
+                        <FaEye className="h-5 w-5" />
                       </button>
                     </div>
                   </td>

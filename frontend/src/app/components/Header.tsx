@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from "@/context/AuthContext";
+import { FaSignOutAlt } from "react-icons/fa";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -32,9 +33,7 @@ export default function Header() {
           className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           aria-label="Cerrar Sesión"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
+          <FaSignOutAlt className="h-6 w-6 text-gray-600" />
         </button>
       </div>
     </header>

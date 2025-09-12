@@ -42,6 +42,7 @@ class UserRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     created_from_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP de Creación")
     active = models.BooleanField(default=True, verbose_name="Activo")
+    different = models.BooleanField(default=False, verbose_name="Diferente")
 
     # Archivos cargados (guardados en JSON o en relación aparte)
     uploaded_files = models.JSONField(default=list, blank=True, verbose_name="Archivos Subidos")
